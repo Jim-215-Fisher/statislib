@@ -1,0 +1,514 @@
+#:include "common.fypp"
+Module stdlib_stats_distribution_binomial
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use stdlib_stats_distribution_uniform, only : uni=>uniform_distribution_rvs
+    use stdlib_stats_distribution_special, ingamma=>ingamma_low,                &
+                                           lgf=>log_factorial
+
+    implicit none
+    private
+    real(dp), parameter  :: ONE = 1.0_dp
+    real, parameter :: sptol = 1.0e-6
+
+    public :: binomial_distribution_rvs
+    public :: binomial_distribution_pmf
+    public :: binomial_distribution_cdf
+
+    interface binomial_distribution_rvs
+    !! Version experimental
+    !!
+    !! Binomial Distribution Random Variates
+    !!([Specification](../page/specs/stdlib_stats_distribution_binomial.html#
+    !! description))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure binom_dist_rvs_${t1[0]}$${k1}$       ! 2 dummy
+        #:endfor
+
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure binom_dist_rvs_array_${t1[0]}$${k1}$ ! 3 dummy
+        #:endfor
+    end interface binomial_distribution_rvs
+
+    interface binomial_distribution_pmf
+    !! Version experimental
+    !!
+    !! Binomial Distribution Probability Density Function
+    !!([Specification](../page/specs/stdlib_stats_distribution_binomial.html#
+    !! description))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure binom_dist_pmf_${t1[0]}$${k1}$
+        #:endfor
+    end interface binomial_distribution_pmf
+
+    interface binomial_distribution_cdf
+    !! Version experimental
+    !!
+    !! Binomial Distribution Cumulative Distribution Function
+    !!([Specification](../page/specs/stdlib_stats_distribution_binomial.html#
+    !! description))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure binom_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface binomial_distribution_cdf
+
+
+    contains
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function binom_dist_rvs_${t1[0]}$${k1}$(n, p) result(res)
+    ! For np < 10 or (1-p)^n > 1e-6, algorithm is based on BINV inversion
+    ! sequential search
+    ! For np >= 10, algorithm is based on BTPE by V. Kachitvichyanukul and B.
+    ! Schmeiser,  "Binomial random variate generation",  Comm. ACM, 31(2), 1988,
+    ! p216
+    !
+    ! Fortran 90 program by Jim-215-Fisher
+    !
+        ${t1}$, intent(in) :: n
+        ${t1}$ :: res
+        real, intent(in) :: p
+        ${t1}$, save :: n0
+        real, save :: pp, p0, q0, s0, a0, r0, rs0
+        real, save :: fm, npq, p1, p2, p3, p4, xm, xl, xr, c, lamdal, lamdar
+        integer, save :: m, mrang
+        real, allocatable, save :: pb(:), pc(:,:)
+        logical, allocatable, save :: pbl(:), pcl(:,:)
+        real :: u, v, r, fy, rho, t, x1, f1, x2, f2, z, z2, w, w2, cc
+        real, allocatable :: tmp1(:), tmp2(:,:)
+        logical, allocatable :: tmp1l(:), tmp2l(:,:)
+        integer :: i, k, n2, y, im
+
+        if(n <= 0 ) call error_stop("Error(binom_dist_rvs): Binomial trial"     &
+                   //" number must be positive integer")
+        if(p < 0. .or. p > 1.) call error_stop("Error(binom_dist_rvs):"         &
+                   //" probability must be in the range [0.0, 1.0]")
+
+        if(p /= pp) then     ! test parameters change
+            pp = p
+            p0 = min(pp, 1.0 - pp); q0 = 1.0 - p0
+            s0 = p0 / q0; rs0 = q0 / p0
+            n0 = n
+            a0 = (n0 + 1) * s0; r0 = q0 ** n0
+            if(r0 <= sptol) then     ! for BTPE algorithm
+                fm = (n0 + 1) * p0
+                npq = n0 * p0 * q0
+                m = fm; mrang = 6 * sqrt(npq)
+                allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
+                allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),           &
+                         source = .false.)
+                pb(0) = 1.0; pbl(0) = .true.
+                pc(2,0) = 0.0; pcl(2, 0) = .true.
+                p1 = int(2.195 * sqrt(npq) - 4.6 * q0) + 0.5
+                xm = m + 0.5
+                xl = xm - p1
+                xr = xm + p1
+                c = 0.134 + 20.5 / (15.3 + m)
+                r = (fm - xl) / (fm - xl * p0)
+                lamdal = r * (1 + r / 2)
+                r = (xr - fm) / (xr * q0)
+                lamdar = r * (1 + r / 2)
+                p2 = p1 * (1 + 2 * c)
+                p3 = p2 + c / lamdal
+                p4 = p3 + c/ lamdar
+            endif
+        elseif(n /= n0) then           ! test parameter change
+            n0 = n; a0 = (n0 + 1) * s0; r0 = q0 ** n0
+            if(r0 <= sptol) then
+                fm = (n0 + 1) * p0
+                npq = n0 * p0 * q0
+                m = fm; mrang = 6 * sqrt(npq)
+                deallocate(pb, pc, pbl, pcl)
+                allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
+                allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),           &
+                         source = .false.)
+                pb(0) = 1.0; pbl(0) = .true.
+                pc(2,0) = 0.0; pcl(2, 0) = .true.
+                p1 = int(2.195 * sqrt(npq) - 4.6 * q0) + 0.5
+                xm = m + 0.5
+                xl = xm - p1
+                xr = xm + p1
+                c = 0.134 + 20.5 / (15.3 + m)
+                r = (fm - xl) / (fm - xl * p0)
+                lamdal = r * (1 + r / 2)
+                r = (xr - fm) / (xr * q0)
+                lamdar = r * (1 + r / 2)
+                p2 = p1 * (1 + 2 * c)
+                p3 = p2 + c / lamdal
+                p4 = p3 + c/ lamdar
+            endif
+        endif
+
+        if(r0 > sptol) then                  ! use BINV
+            u = uni( )
+            k = 0; r = r0
+            do
+                if(u <= r) exit
+                if(r < sptol) then !if residual probability is too small, restart
+                    u = uni( )
+                    k = 0; r = r0
+                    cycle
+                endif
+                u = u - r
+                k = k + 1
+                r = (a0 / k - s0) * r
+            end do
+            n2 = k
+            if(p > 0.5) n2 = n0 - n2
+        else                                  ! use BTPE
+            do
+                u = p4 * uni( ); v = uni( )
+                if(u <= p1) then              ! Triangular region
+                    y = xm - p1 * v + u
+                    exit
+                elseif(u <= p2) then          ! parallogram region
+                    r = xl + (u - p1) / c
+                    v = v * c + 1 - abs(m - r + 0.5) / p1
+                    if(v > 1.) cycle
+                    y = r
+                elseif(u <= p3) then          !left exponential tail
+                    y = xl + log(v) / lamdal
+                    if(y < 0) cycle
+                    v = v * (u - p2) * lamdal
+                else                          ! right exponential tail
+                    y = xr - log(v) / lamdar
+                    if(y > n) cycle
+                    v = v * (u - p3) * lamdar
+                end if
+                k = abs(y - m)
+                if(.not. (k > 20 .and. k < npq / 2 - 1)) then
+                    if(k > mrang) then        ! expand storage size
+                        do
+                            mrang = mrang + 4
+                            if(k < mrang) exit
+                        end do
+                        allocate(tmp1(-mrang : mrang), source = 0.0)
+                        allocate(tmp1l(-mrang : mrang), source = .false.)
+                        im = (size(pb) - 1) / 2
+                        tmp1(-im : im) = pb; tmp1l(-im : im) = pbl
+                        call move_alloc(tmp1, pb)
+                        call move_alloc(tmp1l, pbl)
+                    end if
+                    if(.not. pbl(y - m)) then   ! calculate probability
+                        fy = 1.0
+                        if(y > m) then
+                            do i = m + 1, y
+                                fy = fy * (a0 / i - s0)
+                            end do
+                        else
+                            do i = m - 1, y, -1
+                                fy = fy * (i + 1) * rs0 / (n0 - i)
+                            end do
+                        end if
+                        pb(y - m) = fy; pbl(y - m) = .true.
+                    end if
+                    if(v <= pb(y - m)) exit
+                else
+                    r = log(v)
+                    if(k > mrang) then          ! expand storage size
+                        do
+                            mrang = mrang + 4
+                            if(k < mrang) exit
+                        end do
+                        allocate(tmp2(3, -mrang : mrang), source = 0.0)
+                        allocate(tmp2l(3, -mrang : mrang), source = .false.)
+                        im = (size(pc, 2) - 1) / 2
+                        tmp2(:, -im : im) = pc(:, :)
+                        tmp2l(:, -im : im) = pcl(:, :)
+                        call move_alloc(tmp2, pc)
+                        call move_alloc(tmp2l, pcl)
+                    end if
+                    if(.not. (pcl(3, y - m) .and. pcl(1, y - m))) then
+                        rho = k / npq
+                        rho = rho * ((k * (k / 3.0 + 0.625) + 1.0 / 6) /        &
+                              npq + 0.5)
+                        t = - 0.5 * k * k / npq
+                        pc(3, y - m) = t + rho; pc(1, y - m) = t - rho
+                        pcl(3, y - m) = .true.; pcl(1, y - m) = .true.
+                    end if
+                    if(r < pc(1, y - m)) exit     ! squeeze
+                    if(r > pc(3, y - m)) cycle    ! rejection
+                    if(.not. pcl(2, y - m)) then  ! approxiamte probability
+                        x1 = y + 1.0
+                        f1 = m + 1.0
+                        z = n0 + 1.0 - m
+                        w = n0 - y + 1.0
+                        x2 = x1 * x1; f2 = f1 * f1; z2 = z * z; w2 = w * w
+                        cc = xm * log(f1 / x1) + (n0 - m + 0.5) * log(z / w)
+                        cc = cc + (y - m) * log(w * p0 / (x1 * q0))
+                        cc = cc + (13860.0 - (462.0 - (132.0 - (99.0 - 140.0 /  &
+                             f2) / f2) / f2) / f2) / f1 / 166320.0
+                        cc = cc + (13860.0 - (462.0 - (132.0 - (99.0 - 140.0 /  &
+                             z2) / z2) / z2) / z2) / z / 166320.0
+                        cc = cc + (13860.0 - (462.0 - (132.0 - (99.0 - 140.0 /  &
+                             x2) / x2) / x2) / x2) / x1 / 166320.0
+                        cc = cc + (13860.0 - (462.0 - (132.0 - (99.0 - 140.0 /  &
+                             w2) / w2) / w2) / w2) / w / 166320.0
+                        pc(2, y - m) = cc; pcl(2, y - m) = .true.
+                    end if
+                    if(r <= pc(2, y - m)) exit
+                end if
+            end do
+            n2 = y
+            if(p > 0.5) n2 = n0 - n2
+        endif
+        res = n2
+    end function binom_dist_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    function binom_dist_rvs_array_${t1[0]}$${k1}$(n, p, array_size) result(res)
+        ${t1}$, intent(in) :: n
+        ${t1}$, allocatable :: res(:), n2(:)
+        real, intent(in) :: p
+        integer, intent(in) :: array_size
+        ${t1}$, save :: n0
+        real, save :: pp, p0, q0, s0, a0, r0, rs0
+        real, save :: fm, npq, p1, p2, p3, p4, xm, xl, xr, c, lamdal, lamdar
+        integer, save :: m, mrang
+        real, allocatable, save :: pb(:), pc(:,:)
+        logical, allocatable, save :: pbl(:), pcl(:,:)
+        real :: u, v, r, fy, rho, t, x1, f1, x2, f2, z, z2, w, w2, cc
+        real, allocatable :: tmp1(:), tmp2(:,:)
+        logical, allocatable :: tmp1l(:), tmp2l(:,:)
+        integer :: i, j, k, y, im
+
+        if(n <= 0 ) call error_stop("Error(binom_dist_rvs): Binomial trial"     &
+                   //" number must be positive integer")
+        if(p < 0. .or. p > 1.) call error_stop("Error(binom_dist_rvs):"         &
+                   //" probability must be in the range [0.0, 1.0]")
+
+        allocate(res(array_size), n2(array_size))
+        if(p /= p0) then
+            pp = p
+            p0 = min(pp, 1.0 - pp); q0 = 1.0 - p0
+            s0 = p0 / q0; rs0 = q0 / p0
+            n0 = n
+            a0 = (n0 + 1) * s0; r0 = q0 ** n0
+            if(r0 <= sptol) then
+                fm = (n0 + 1) * p0
+                npq = n0 * p0 * q0
+                m = fm; mrang = 6 * sqrt(npq)
+                allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
+                allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),           &
+                         source = .false.)
+                pb(0) = 1.0; pbl(0) = .true.
+                pc(2,0) = 0.0; pcl(2, 0) = .true.
+                p1 = int(2.195 * sqrt(npq) - 4.6 * q0) + 0.5
+                xm = m + 0.5
+                xl = xm - p1
+                xr = xm + p1
+                c = 0.134 + 20.5 / (15.3 + m)
+                r = (fm - xl) / (fm - xl * p0)
+                lamdal = r * (1 + r / 2)
+                r = (xr - fm) / (xr * q0)
+                lamdar = r * (1 + r / 2)
+                p2 = p1 * (1 + 2 * c)
+                p3 = p2 + c / lamdal
+                p4 = p3 + c/ lamdar
+            endif
+        elseif(n /= n0) then
+            n0 = n; a0 = (n0 + 1) * s0; r0 = q0 ** n0
+            if(r0 <= sptol) then
+                fm = (n0 + 1) * p0
+                npq = n0 * p0 * q0
+                m = fm; mrang = 6 * sqrt(npq)
+                deallocate(pb, pc, pbl, pcl)
+                allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
+                allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),           &
+                         source = .false.)
+                pb(0) = 1.0; pbl(0) = .true.
+                pc(2,0) = 0.0; pcl(2, 0) = .true.
+                p1 = int(2.195 * sqrt(npq) - 4.6 * q0) + 0.5
+                xm = m + 0.5
+                xl = xm - p1
+                xr = xm + p1
+                c = 0.134 + 20.5 / (15.3 + m)
+                r = (fm - xl) / (fm - xl * p0)
+                lamdal = r * (1 + r / 2)
+                r = (xr - fm) / (xr * q0)
+                lamdar = r * (1 + r / 2)
+                p2 = p1 * (1 + 2 * c)
+                p3 = p2 + c / lamdal
+                p4 = p3 + c/ lamdar
+            endif
+        endif
+
+        if(r0 > sptol) then
+            do i = 1, array_size
+                u = uni( )
+                k = 0; r = r0
+                do
+                    if(u <= r) exit
+                    if(r < sptol) then
+                        u = uni( )
+                        k = 0; r = r0
+                        cycle
+                    endif
+                    u = u - r
+                    k = k + 1
+                    r = (a0 / k - s0) * r
+                end do
+                n2(i) = k
+            end do
+            if(p > 0.5) n2 = n0 - n2
+        else
+            do j = 1, array_size
+                do
+                    u = p4 * uni( ); v = uni( )
+                    if(u <= p1) then
+                        y = xm - p1 * v + u
+                        exit
+                    elseif(u <= p2) then
+                        r = xl + (u - p1) / c
+                        v = v * c + 1 - abs(m - r + 0.5) / p1
+                        if(v > 1.) cycle
+                        y = r
+                    elseif(u <= p3) then
+                        y = xl + log(v) / lamdal
+                        if(y < 0) cycle
+                        v = v * (u - p2) * lamdal
+                    else
+                        y = xr - log(v) / lamdar
+                        if(y > n) cycle
+                        v = v * (u - p3) * lamdar
+                    end if
+                    k = abs(y - m)
+                    if(.not. (k > 20 .and. k < npq / 2 - 1)) then
+                        if(k > mrang) then  !  expand storage size
+                            do
+                                mrang = mrang + 4
+                                if(k < mrang) exit
+                            end do
+                            allocate(tmp1(-mrang : mrang), source = 0.0)
+                            allocate(tmp1l(-mrang : mrang), source = .false.)
+                            im = (size(pb) - 1) / 2
+                            tmp1(-im : im) = pb; tmp1l(-im : im) = pbl
+                            call move_alloc(tmp1, pb)
+                            call move_alloc(tmp1l, pbl)
+                        end if
+                        if(.not. pbl(y - m)) then   ! calculate probability
+                            fy = 1.0
+                            if(y > m) then
+                                do i = m + 1, y
+                                    fy = fy * (a0 / i - s0)
+                                end do
+                            else
+                                do i = m - 1, y, -1
+                                    fy = fy * (i + 1) * rs0 / (n0 - i)
+                                end do
+                            end if
+                            pb(y - m) = fy; pbl(y - m) = .true.
+                        end if
+                        if(v <= pb(y - m)) exit
+                    else
+                        r = log(v)
+                        if(k > mrang) then  !  expand storage size
+                            do
+                                mrang = mrang + 4
+                                if(k < mrang) exit
+                            end do
+                            allocate(tmp2(3, -mrang : mrang), source = 0.0)
+                            allocate(tmp2l(3, -mrang : mrang), source = .false.)
+                            im = (size(pc, 2) - 1) / 2
+                            tmp2(:, -im : im) = pc(:, :)
+                            tmp2l(:, -im : im) = pcl(:, :)
+                            call move_alloc(tmp2, pc)
+                            call move_alloc(tmp2l, pcl)
+                        end if
+                        if(.not. (pcl(3, y - m) .and. pcl(1, y - m))) then
+                            rho = k / npq
+                            rho = rho * ((k * (k / 3.0 + 0.625) + 1.0 / 6) /    &
+                                  npq + 0.5)
+                            t = - 0.5 * k * k / npq
+                            pc(3, y - m) = t + rho; pc(1, y - m) = t - rho
+                            pcl(3, y - m) = .true.; pcl(1, y - m) = .true.
+                        end if
+                        if(r < pc(1, y - m)) exit
+                        if(r > pc(3, y - m)) cycle
+                        if(.not. pcl(2, y - m)) then
+                            x1 = y + 1.0
+                            f1 = m + 1.0
+                            z = n0 + 1.0 - m
+                            w = n0 - y + 1.0
+                            x2 = x1 * x1; f2 = f1 * f1; z2 = z * z; w2 = w * w
+                            cc = xm * log(f1 / x1) + (n0 - m + 0.5) * log(z / w)
+                            cc = cc + (y - m) * log(w * p0 / (x1 * q0))
+                            cc = cc + (13860.0 - (462.0 - (132.0 - (99.0-140.0/ &
+                                 f2) / f2) / f2) / f2) / f1 / 166320.0
+                            cc = cc + (13860.0 - (462.0 - (132.0 - (99.0-140.0/ &
+                                 z2) / z2) / z2) / z2) / z / 166320.0
+                            cc = cc + (13860.0 - (462.0 - (132.0 - (99.0-140.0/ &
+                                 x2) / x2) / x2) / x2) / x1 / 166320.0
+                            cc = cc + (13860.0 - (462.0 - (132.0 - (99.0-140.0/ &
+                                 w2) / w2) / w2) / w2) / w / 166320.0
+                            pc(2, y - m) = cc; pcl(2, y - m) = .true.
+                        end if
+                        if(r <= pc(2, y - m)) exit
+                    end if
+                end do
+                n2(j) = y
+            end do
+            if(p > 0.5) n2 = n0 - n2
+        endif
+        res = n2
+    end function binom_dist_rvs_array_${t1[0]}$${k1}$
+
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function binom_dist_pmf_${t1[0]}$${k1}$(k, n, p) result(res)
+    ! Binomial Probability Mass Function
+    !
+        ${t1}$, intent(in) :: k, n
+        real :: res
+        real, intent(in) :: p
+        real(dp) :: tmp
+
+        if(n <= 0 ) call error_stop("Error(binom_dist_pmf): Binomial trial"     &
+                   //" number must be positive integer")
+        if(p < 0 .or. p > 1) call error_stop("Error(binom_dist_pmf):"           &
+                   //" probability must be in the range [0.0, 1.0]")
+
+        tmp = lgf(n, one) - lgf(k, one) -                                       &
+              lgf(n - k, one) + k * log(real(p, kind=dp))+                      &
+              (n - k) * log(ONE - p)
+        res = real(exp(tmp), kind = sp)
+        return
+    end function binom_dist_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function binom_dist_cdf_${t1[0]}$${k1}$(k, n, p) result(res)
+        ${t1}$, intent(in) :: k, n
+        real, intent(in) :: p
+        real :: res
+        integer :: i
+        real(dp) :: p0, coeff, q, logpmf, sum, lq, lpq
+
+        if(n <= 0 ) call error_stop("Error(binom_dist_cdf): Binomial trial"     &
+                   //" number must be positive integer")
+        if(p < 0 .or. p > 1) call error_stop("Error(binom_dist_cdf):"           &
+                   //" probability must be in the range [0.0, 1.0]")
+        p0 = real(p, kind=dp)
+        q = one - p0
+        lq = log(q)
+        lpq = log(p0 / q)
+        coeff = 0.0_dp
+        sum = exp(n * lq)
+        do i = 1, k
+            coeff = coeff + log(real(n - i + 1, kind=dp)) - log(real(i, kind=dp))
+            logpmf = coeff + i * lpq + n * lq
+            sum = sum + exp(logpmf)
+        end do
+        res = real(sum, kind = sp)
+        return
+    end function binom_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+end module stdlib_stats_distribution_binomial

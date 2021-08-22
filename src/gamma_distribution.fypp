@@ -1,0 +1,299 @@
+#:include "common.fypp"
+#:set RC_KINDS_TYPES = REAL_KINDS_TYPES + CMPLX_KINDS_TYPES
+module statislib_gamma
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use statislib_uniform, only : uni => uniform_distribution_rvs
+    use statislib_normal, only : rnor => normal_distribution_rvs
+    use statislib_special, only : ingamma => lower_incomplete_gamma, loggamma, &
+        reggamma => regularized_gamma_p
+
+    implicit none
+    private
+    integer(int64), parameter :: INT_ONE = 1_int64
+
+    public :: gamma_distribution_rvs
+    public :: gamma_distribution_pdf
+    public :: gamma_distribution_cdf
+
+
+
+    interface gamma_distribution_rvs
+    !! Version 0.1
+    !!
+    !! Gamma Distribution Random Variates
+    !! ([Document](../doc/gamma_distribution.md))
+    !!
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure gamma_dist_rvs_${t1[0]}$${k1}$       ! 1 or 2 arguments
+        #:endfor
+
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure gamma_dist_rvs_array_${t1[0]}$${k1}$ ! 2 or 3 arguments
+        #:endfor
+    end interface gamma_distribution_rvs
+
+
+
+    interface gamma_distribution_pdf
+    !! Version 0.1
+    !!
+    !! Gamma Distribution Probability Density Function
+    !! ([Document](../doc/gamma_distribution.md))
+    !!
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure gamma_dist_pdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface gamma_distribution_pdf
+
+
+
+    interface gamma_distribution_cdf
+    !! Version 0.1
+    !!
+    !! Gamma Distribution Cumulative Distribution Function
+    !! ([Document](../doc/gamma_distribution.md))
+    !!
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure gamma_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface gamma_distribution_cdf
+
+
+
+
+
+contains
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function gamma_dist_rvs_${t1[0]}$${k1}$(alpha, beta)      &
+        result(res)
+    !
+    ! A simple method for generating gamma variables, George Marsaglia & W. W.
+    ! Tsang, ACM Transactions on Mathematical Software, Vol. 26(3), Sept. 2000,
+    ! p. 363
+    !
+        ${t1}$, intent(in) :: alpha
+        ${t1}$, intent(in), optional :: beta
+        ${t1}$ :: res
+        ${t1}$ :: x, v, u, zz, tol = 1000 * epsilon(1.0_${k1}$)
+        ${t1}$, save :: alpha_0 = 0._${k1}$, d, c, sq = 0.0331_${k1}$
+
+        if(alpha <= 0.0_${k1}$) call error_stop("Error(gamma_dist_rvs): Gamma" &
+            //" distribution alpha parameter must be greater than zero")
+
+        if(present(beta) .and. beta <= 0.0_${k1}$) call error_stop("Error("    &
+            //"gamma_dist_rvs): Gamma distribution beta parameter must be "    &
+            //"greater than zero")
+
+        zz = alpha
+        if(zz < 1._${k1}$) zz = 1._${k1}$ + zz
+        if(abs(zz - alpha_0) > tol) then
+            alpha_0 = zz
+            d = alpha_0 - 1._${k1}$ / 3._${k1}$
+            c = 1._${k1}$ / (3._${k1}$ * sqrt(d))
+        endif
+        do
+            do
+                x = rnor(0.0_${k1}$, 1.0_${k1}$)
+                v = 1._${k1}$ + c * x
+                v = v * v * v
+                if(v > 0._${k1}$) exit
+            end do
+            x = x * x
+            u = uni(1.0_${k1}$)
+            if(u < (1._${k1}$ - sq * x * x)) exit
+            if(log(u) < 0.5_${k1}$ * x + d * (1._${k1}$ - v + log(v))) exit
+        end do
+        res = d * v
+        if(alpha < 1._${k1}$) then
+            u = uni(1.0_${k1}$)
+            res = res * u ** (1._${k1}$ / alpha)
+        endif
+        if(present(beta)) res = res / beta
+    end function gamma_dist_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function gamma_dist_rvs_${t1[0]}$${k1}$(alpha, beta)      &
+        result(res)
+    !
+    ! Gamma distributed complex random number. The real part and imaginary part
+    ! are independent of each other.
+    !
+        ${t1}$, intent(in) :: alpha
+        ${t1}$, intent(in), optional :: beta
+        ${t1}$ :: res, bt
+        real(${k1}$) :: tr, ti
+
+        bt = (1.0_${k1}$, 1.0_${k1}$)
+        if(present(beta)) bt = beta
+        tr = gamma_dist_rvs_r${k1}$(alpha % re, bt % re)
+        ti = gamma_dist_rvs_r${k1}$(alpha % im, bt % im)
+        res = cmplx(tr, ti, kind=${k1}$)
+    end function gamma_dist_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    function gamma_dist_rvs_array_${t1[0]}$${k1}$(alpha, beta, array_size)     &
+        result(res)
+
+        ${t1}$, intent(in) :: alpha
+        ${t1}$, intent(in), optional :: beta
+        integer, intent(in) :: array_size
+        ${t1}$ :: res(array_size)
+        ${t1}$ :: x, v, u, zz, tol = 1000 * epsilon(1.0_${k1}$)
+        ${t1}$, save :: alpha_0 = 0._${k1}$, d, c, sq = 0.0331_${k1}$
+        integer :: i
+
+        if(alpha <= 0.0_${k1}$) call error_stop("Error(gamma_dist_rvs_array):" &
+            //" Gamma distribution alpha parameter must be greater than zero")
+
+        if(present(beta) .and. beta <= 0.0_${k1}$) call error_stop("Error("    &
+            //"gamma_dist_rvs_array): Gamma distribution beta parameter must " &
+            //"be greater than zero")
+
+        zz = alpha
+        if(zz < 1._${k1}$) zz = 1._${k1}$ + zz
+        if(abs(zz - alpha_0) > tol) then
+            alpha_0 = zz
+            d = alpha_0 - 1._${k1}$ / 3._${k1}$
+            c = 1._${k1}$ / (3._${k1}$ * sqrt(d))
+        endif
+        do i = 1, array_size
+            do
+                do
+                    x = rnor(0.0_${k1}$, 1.0_${k1}$)
+                    v = 1._${k1}$ + c * x
+                    v = v * v * v
+                    if(v > 0._${k1}$) exit
+                end do
+                x = x * x
+                u = uni(1.0_${k1}$)
+                if(u < (1._${k1}$ - sq * x * x)) exit
+                if(log(u) < 0.5_${k1}$ * x + d * (1._${k1}$ - v + log(v))) exit
+            end do
+            res(i) = d * v
+            if(alpha < 1._${k1}$) then
+                u = uni(1.0_${k1}$)
+                res(i) = res(i) * u ** (1._${k1}$ / alpha)
+            endif
+            if(present(beta)) res(i) = res(i) / beta
+        end do
+    end function gamma_dist_rvs_array_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    function gamma_dist_rvs_array_${t1[0]}$${k1}$(alpha, beta, array_size)     &
+        result(res)
+
+        ${t1}$, intent(in) :: alpha
+        ${t1}$, intent(in), optional :: beta
+        integer, intent(in) :: array_size
+        ${t1}$ :: res(array_size), bt
+        real(${k1}$) :: tr(array_size), ti(array_size)
+
+        bt = (1.0_${k1}$, 1.0_${k1}$)
+        if(present(beta)) bt = beta
+        tr = gamma_dist_rvs_array_r${k1}$(alpha % re, bt % re, array_size)
+        ti = gamma_dist_rvs_array_r${k1}$(alpha % re, bt % re, array_size)
+        res = cmplx(tr, ti, kind=${k1}$)
+    end function gamma_dist_rvs_array_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function gamma_dist_pdf_${t1[0]}$${k1}$(x, alpha, beta)   &
+        result(res)
+    !
+    ! Gamma distributed probability function
+    !
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+
+        if(beta <= 0.0_${k1}$) call error_stop("Error(gamma_dist_pdf): Gamma"  &
+            //" distribution beta parameter must be greaeter than zero")
+        if(alpha <= 0.0_${k1}$) call error_stop("Error(gamma_dist_pdf): Gamma" &
+            //" distribution alpha parameter must be greater than zero")
+        if(x <= 0.0_${k1}$) call error_stop("Error(gamma_dist_pdf): Gamma"     &
+            //" distribution variate x must be greater than zero")
+        if(x == 0.0_${k1}$) then
+            if(alpha <= 1.0_${k1}$) then
+                res = huge(1.0) + 1.0
+            else
+                res = 0.0_${k1}$
+            endif
+        else
+            res = exp((alpha - 1._${k1}$) * log(x) - x * beta + alpha *        &
+              log(beta) - loggamma(alpha))
+        endif
+    end function gamma_dist_pdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function gamma_dist_pdf_${t1[0]}$${k1}$(x, alpha, beta)   &
+        result(res)
+
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+
+        res = gamma_dist_pdf_r${k1}$(x % re, alpha % re, beta % re)
+        res = res * gamma_dist_pdf_r${k1}$(x % im, alpha % im, beta % im)
+    end function gamma_dist_pdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function gamma_dist_cdf_${t1[0]}$${k1}$(x, alpha, beta)   &
+        result(res)
+    !
+    ! Gamma random cumulative distribution function
+    !
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+
+        if(beta <= 0.0_${k1}$) call error_stop("Error(gamma_dist_pdf): Gamma"  &
+            //" distribution beta parameter must be greaeter than zero")
+        if(alpha <= 0.0_${k1}$) call error_stop("Error(gamma_dist_pdf): Gamma" &
+            //" distribution alpha parameter must be greater than zero")
+        if(x <= 0.0_${k1}$) call error_stop("Error(gamma_dist_pdf): Gamma"     &
+            //" distribution variate x must be greater than zero")
+        res = reggamma(alpha, beta * x)
+    end function gamma_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function gamma_dist_cdf_${t1[0]}$${k1}$(x, alpha, beta)   &
+        result(res)
+
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+
+        res = gamma_dist_cdf_r${k1}$(x % re, alpha % re, beta % re)
+        res = res * gamma_dist_cdf_r${k1}$(x % im, alpha % im, beta % im)
+    end function gamma_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+end module statislib_gamma

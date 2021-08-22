@@ -1,0 +1,273 @@
+#:include "common.fypp"
+#:set RC_KINDS_TYPES = REAL_KINDS_TYPES + CMPLX_KINDS_TYPES
+module statislib_beta
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use statislib_uniform, only : uni=>uniform_distribution_rvs
+    use statislib_gamma, only : rgamma=>gamma_distribution_rvs
+    use statislib_special, only : inbeta => incomplete_beta, f_beta => beta
+
+
+    implicit none
+    private
+    integer(int64), parameter :: INT_ONE = 1_int64
+
+    public :: beta_distribution_rvs
+    public :: beta_distribution_pdf
+    public :: beta_distribution_cdf
+
+
+
+    interface beta_distribution_rvs
+    !! Version experimental
+    !!
+    !! Beta Distribution Random Variates
+    !! ([Document](../doc/beta_distribution.md))
+    !!
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure beta_dist_rvs_${t1[0]}$${k1}$       ! 2 arguments
+        #:endfor
+
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure beta_dist_rvs_array_${t1[0]}$${k1}$ ! 3 arguments
+        #:endfor
+    end interface beta_distribution_rvs
+
+
+
+    interface beta_distribution_pdf
+    !! Version experimental
+    !!
+    !! Beta Distribution Probability Density Function
+    !! ([Document](../doc/beta_distribution.md))
+    !!
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure beta_dist_pdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface beta_distribution_pdf
+
+
+
+    interface beta_distribution_cdf
+    !! Version experimental
+    !!
+    !! Beta Distribution Cumulative Distribution Function
+    !! ([Document](../doc/beta_distribution.md))
+    !!
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure beta_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface beta_distribution_cdf
+
+
+
+
+
+contains
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function beta_dist_rvs_${t1[0]}$${k1}$(alpha, beta)       &
+        result(res)
+    !
+    ! Non-uniform random variate generation, Luc Devroye, 1986, p.416, p.428
+    !
+        ${t1}$, intent(in) :: alpha, beta
+        ${t1}$ :: res, x, y, xx(2)
+        ${t1}$, parameter :: z = 0.0_${k1}$, one = 1.0_${k1}$
+
+        if(alpha <= z .or. beta <= z) call error_stop("Error(beta_dist_rvs): " &
+            //"Beta distribution paramters alpha, beta must be greater than"   &
+            //" zero")
+        if( alpha < one .or. beta < one) then
+            do
+                xx = uni(z, one, 2)
+                x = xx(1) ** (one / alpha)
+                y = xx(2) ** (one / beta)
+                y = x + y
+                if(y <= one .and. y /= z) exit
+            end do
+        else
+            do
+                x = rgamma(alpha); y = rgamma(beta)
+                y = x + y
+                if( y /= z) exit
+            end do
+        endif
+        res = x / y
+    end function beta_dist_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function beta_dist_rvs_${t1[0]}$${k1}$(alpha, beta)       &
+        result(res)
+    !
+    ! Beta distributed complex. The real part and imaginary part are
+    ! independent of each other.
+    !
+        ${t1}$, intent(in) :: alpha, beta
+        ${t1}$ :: res
+        real(${k1}$) :: tr, ti
+
+        tr = beta_dist_rvs_r${k1}$(alpha % re, beta % re)
+        ti = beta_dist_rvs_r${k1}$(alpha % im, beta % im)
+        res = cmplx(tr, ti, kind = ${k1}$)
+    end function beta_dist_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    function beta_dist_rvs_array_${t1[0]}$${k1}$(alpha, beta, array_size)      &
+        result(res)
+
+        ${t1}$, intent(in) :: alpha, beta
+        integer, intent(in) :: array_size
+        ${t1}$ :: res(array_size)
+        integer :: i
+        ${t1}$ :: x, y, xx(2)
+        real(${k1}$), parameter :: z = 0.0_${k1}$, one = 1.0_${k1}$
+
+        if(alpha <= z .or. beta <= z) call error_stop("Error("                 &
+            //"beta_dist_rvs_array): Beta distribution paramters alpha, beta"  &
+            //" must be greater than zero")
+
+
+        if( alpha < one .or. beta < one) then
+            do i = 1, array_size
+                do
+                    xx = uni(z, one, 2)
+                    x = xx(1) ** (one / alpha)
+                    y = xx(2) ** (one / beta)
+                    y = x + y
+                    if(y <= one .and. y /= z) exit
+                end do
+                res(i) = x / y
+            end do
+        else
+            do i = 1, array_size
+                do
+                    x = rgamma(alpha); y = rgamma(beta)
+                    y = x + y
+                    if( y /= z) exit
+                end do
+                res(i) = x / y
+            end do
+        endif
+    end function beta_dist_rvs_array_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    function beta_dist_rvs_array_${t1[0]}$${k1}$(alpha, beta, array_size)      &
+        result(res)
+
+        ${t1}$, intent(in) :: alpha, beta
+        integer, intent(in) :: array_size
+        ${t1}$ :: res(array_size)
+        real(${k1}$) :: tr(array_size), ti(array_size)
+
+        tr = beta_dist_rvs_array_r${k1}$(alpha % re, beta % re, array_size)
+        ti = beta_dist_rvs_array_r${k1}$(alpha % im, beta % im, array_size)
+        res = cmplx(tr, ti, kind = ${k1}$)
+    end function beta_dist_rvs_array_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function beta_dist_pdf_${t1[0]}$${k1}$(x, alpha, beta)    &
+        result(res)
+    !
+    ! Beta distributed probability function
+    !
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+        ${t1}$ :: z = 0.0_${k1}$, one = 1.0_${k1}$
+
+        if(alpha <= z .or. beta <= z) call error_stop("Error(beta_dist_pdf): " &
+            //"Beta distribution parameters alpha, beta must be greater than"  &
+            //" zero")
+        if(x == z) then
+            if(alpha <= one) then
+                res = huge(1.0)
+            else
+                res = z
+            endif
+        elseif(x == one) then
+            if(beta <= one) then
+                res = huge(1.0)
+             else
+                res = z
+            endif
+        else
+            res = x ** (alpha - 1) * (1 - x) ** (beta - 1) / f_beta(alpha, beta)
+        endif
+    end function beta_dist_pdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function beta_dist_pdf_${t1[0]}$${k1}$(x, alpha, beta)    &
+        result(res)
+
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+
+        res = beta_dist_pdf_r${k1}$(x % re, alpha % re, beta % re)
+        res = res * beta_dist_pdf_r${k1}$(x % im, alpha % im, beta % im)
+    end function beta_dist_pdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function beta_dist_cdf_${t1[0]}$${k1}$(x, alpha, beta)    &
+        result(res)
+    !
+    ! Beta cumulative distribution function
+    !
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+        ${t1}$ :: z = 0.0_${k1}$, one = 1.0_${k1}$
+
+        if(alpha <= z .or. beta <= z) call error_stop("Error(beta_dist_cdf): " &
+            //"Beta distribution parameters alpha, beta must be greater than"  &
+            //" zero")
+        if(x == z) then
+            res = 0.0
+        elseif(x == one) then
+            res = 1.0
+        else
+            res = inbeta(x, alpha, beta)
+        endif
+    end function beta_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function beta_dist_cdf_${t1[0]}$${k1}$(x, alpha, beta)    &
+        result(res)
+
+        ${t1}$, intent(in) :: x, alpha, beta
+        real :: res
+
+        res = beta_dist_cdf_r${k1}$(x % re, alpha % re, beta % re)
+        res = res * beta_dist_cdf_r${k1}$(x % im, alpha % im, beta % im)
+    end function beta_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+end module statislib_beta

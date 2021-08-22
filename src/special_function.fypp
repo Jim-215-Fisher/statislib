@@ -1,0 +1,1022 @@
+#:include "common.fypp"
+#:set RC_KINDS_TYPES = REAL_KINDS_TYPES + CMPLX_KINDS_TYPES
+#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
+module statislib_special
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+
+    implicit none
+    private
+    real(qp), parameter :: DD(0:10) = [2.48574089138753565546e-5_qp,           &
+                                     1.05142378581721974210_qp,                &
+                                     -3.45687097222016235469_qp,               &
+                                     4.51227709466894823700_qp,                &
+                                     -2.98285225323576655721_qp,               &
+                                     1.05639711577126713077_qp,                &
+                                     -1.95428773191645869583e-1_qp,            &
+                                     1.70970543404441224307e-2_qp,             &
+                                     -5.71926117404305781283e-4_qp,            &
+                                     4.63399473359905636708e-6_qp,             &
+                                     -2.71994908488607703910e-9_qp]
+    ! Coefficients of Lanczos approximation for 16 digits float precision
+
+    real(qp), parameter :: DQ(0:21)= [2.0240434640140357514731512432760e-10_qp,&
+                                      1.5333183020199267370932516012553_qp,    &
+                                     -1.1640274608858812982567477805332e1_qp,  &
+                                      4.0053698000222503376927701573076e1_qp,  &
+                                     -8.2667863469173479039227422723581e1_qp,  &
+                                      1.1414465885256804336106748692495e2_qp,  &
+                                     -1.1135645608449754488425056563075e2_qp,  &
+                                      7.9037451549298877731413453151252e1_qp,  &
+                                     -4.1415428804507353801947558814560e1_qp,  &
+                                      1.6094742170165161102085734210327e1_qp,  &
+                                     -4.6223809979028638614212851576524_qp,    &
+                                      9.7030884294357827423006360746167e-1_qp, &
+                                     -1.4607332380456449418243363858893e-1_qp, &
+                                      1.5330325530769204955496334450658e-2_qp, &
+                                     -1.0773862404547660506042948153734e-3_qp, &
+                                      4.7911128916072940196391032755132e-5_qp, &
+                                     -1.2437781042887028450811158692678e-6_qp, &
+                                      1.6751019107496606112103160490729e-8_qp, &
+                                     -9.7674656970897286097939311684868e-11_qp,&
+                                      1.8326577220560509759575892664132e-13_qp,&
+                                     -6.4508377189118502115673823719605e-17_qp,&
+                                      1.3382662604773700632782310392171e-21_qp]
+    ! Coefficients of Lanczos approximation for 32 digits float precision
+
+    real(qp), parameter :: RD = 10.900511_qp, RQ = 22.618910_qp, HALF = 0.5_qp,&
+              sqepi = log(2.0_qp * sqrt(exp(1.0_qp) / acos(-1.0_qp)))
+    #:for k1, t1 in REAL_KINDS_TYPES
+    ${t1}$, parameter :: tol_${k1}$ = epsilon(1.0_${k1}$)
+    #:endfor
+    real(dp), parameter :: dmd = 1.0e-300_dp
+    real(qp), parameter :: dmq = 1.0e-4900_qp
+
+
+    public :: loggamma, log_factorial
+    public :: lower_incomplete_gamma, log_lower_incomplete_gamma
+    public :: upper_incomplete_gamma, log_upper_incomplete_gamma
+    public :: regularized_gamma_p, regularized_gamma_q
+    public :: beta, log_beta, incomplete_beta, regularized_beta
+
+
+    interface loggamma
+    ! Logrithm of gamma function with real variable
+    !
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure l_gamma_${t1[0]}$${k1}$
+        #:endfor
+    end interface loggamma
+
+
+
+    interface log_factorial
+    ! Logrithm of factorial n!, integer variable
+    !
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure l_factorial_1_${t1[0]}$${k1}$      !1 dummy
+        #:endfor
+
+        #: for k1, t1 in INT_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+        module procedure l_factorial_${t1[0]}$${k1}$${k2}$ !2 dummy
+          #:endfor
+        #:endfor
+    end interface log_factorial
+
+
+
+    interface lower_incomplete_gamma
+    ! Lower incomplete gamma function
+    !
+        #:for k1, t1 in IR_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+            #:if not ((t1[0] == "r") and (k1 != k2))
+        module procedure ingamma_low_${t1[0]}$${k1}$${k2}$
+            #:endif
+          #:endfor
+        #:endfor
+    end interface lower_incomplete_gamma
+
+
+
+    interface log_lower_incomplete_gamma
+    ! Logrithm of lower incomplete gamma function
+    !
+        #:for k1, t1 in IR_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+            #:if not ((t1[0] == "r") and (k1 != k2))
+        module procedure l_ingamma_low_${t1[0]}$${k1}$${k2}$
+            #:endif
+          #:endfor
+        #:endfor
+    end interface log_lower_incomplete_gamma
+
+
+
+    interface upper_incomplete_gamma
+    ! Upper incomplete gamma function
+    !
+        #:for k1, t1 in IR_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+            #:if not ((t1[0] == "r") and (k1 != k2))
+        module procedure ingamma_up_${t1[0]}$${k1}$${k2}$
+            #:endif
+          #:endfor
+        #:endfor
+    end interface upper_incomplete_gamma
+
+
+
+    interface log_upper_incomplete_gamma
+    ! Logrithm of upper incomplete gamma function
+        #:for k1, t1 in IR_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+            #:if not ((t1[0] == "r") and (k1 != k2))
+        module procedure l_ingamma_up_${t1[0]}$${k1}$${k2}$
+            #:endif
+          #:endfor
+        #:endfor
+    end interface log_upper_incomplete_gamma
+
+
+
+    interface regularized_gamma_p
+    ! Regularized (normalized) lower incomplete gamma function, P
+    !
+        #:for k1, t1 in IR_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+            #:if not ((t1[0] == "r") and (k1 != k2))
+        module procedure regamma_p_${t1[0]}$${k1}$${k2}$
+            #:endif
+          #:endfor
+        #:endfor
+    end interface regularized_gamma_p
+
+
+
+    interface regularized_gamma_q
+    ! Regularized (normalized) upper incomplete gamma function, Q
+    !
+        #:for k1, t1 in IR_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+            #:if not ((t1[0] == "r") and (k1 != k2))
+        module procedure regamma_q_${t1[0]}$${k1}$${k2}$
+            #:endif
+          #:endfor
+        #:endfor
+    end interface regularized_gamma_q
+
+
+
+    interface gpx
+    ! Evaluation of incomplete gamma function
+    !
+        #:for k1, t1 in REAL_KINDS_TYPES
+        module procedure gpx_${t1[0]}$${k1}$
+        #:endfor
+
+        #:for k1, t1 in INT_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+        module procedure gpx_${t1[0]}$${k1}$${k2}$
+          #:endfor
+        #:endfor
+    end interface gpx
+
+
+
+    interface beta
+    ! Beta function
+    !
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure beta_${t1[0]}$${k1}$
+        #:endfor
+    end interface beta
+
+
+
+    interface log_beta
+    ! Logrithm of beta function
+    !
+        #:for k1, t1 in RC_KINDS_TYPES
+        module procedure l_beta_${t1[0]}$${k1}$
+        #:endfor
+    end interface log_beta
+
+
+
+    interface incomplete_beta
+    ! Incomplete beta function
+    !
+        #:for k1, t1 in REAL_KINDS_TYPES
+        module procedure inbeta_${t1[0]}$${k1}$
+        #:endfor
+    end interface incomplete_beta
+
+
+
+
+    interface regularized_beta
+    ! Regularized incomplete beta function
+    !
+        #:for k1, t1 in REAL_KINDS_TYPES
+        module procedure regbeta_${t1[0]}$${k1}$
+        #:endfor
+    end interface regularized_beta
+
+
+
+
+
+contains
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function l_gamma_${t1[0]}$${k1}$(x) result (res)
+    !
+    ! Log gamma function for any positive real number i,e, {R+}
+    ! Algorithm is based on Glendon Pugh, "An Analysis of The Lanczos Gamma
+    ! Approximation", The University of British Columbia, 2004
+    !
+    ! Fortran 90 program by Jim-215-Fisher
+    !
+        ${t1}$, intent(in) :: x
+        ${t1}$ :: res
+        real(qp) :: q, sum
+        integer :: i
+
+        if(x <= 0._${k1}$) call error_stop("Error(l_gamma): Logrithm of Gamma "&
+             //"function augument must be greater than zero.")
+        if(x == 1.0_${k1}$ .or. x == 2.0_${k1}$) then
+            res = 0.0_${k1}$
+        else
+            q = x - HALF
+        #:if k1 == "sp"
+            ! single precision use 16 digits coefficients
+            sum = DD(0)
+            do i = 1, 10
+                sum = sum + DD(i) / (x - 1.0_qp + i)
+            end do
+            res = real(sqepi + log(sum) - q + q * log(q + RD), kind=${k1}$)
+        #:else
+            ! double/quadruple precision use 32 digits coef.
+            sum = DQ(0)
+            do i=1, 21
+                sum = sum + DQ(i) / (x - 1.0_qp + i)
+            end do
+            res = real(sqepi + log(sum) - q + q * log(q + RQ), kind=${k1}$)
+        #:endif
+        endif
+    end function l_gamma_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in CMPLX_KINDS_TYPES
+    impure elemental function l_gamma_${t1[0]}$${k1}$(x) result (res)
+    !
+    ! Log gamma function for any complex number with Re(x) > 0
+    !
+        ${t1}$, intent(in) :: x
+        ${t1}$ :: res
+        real(qp) :: q0, q, p, lgr, sumr, sumi, tr, ti, theta1, theta2, t0, t1
+        integer :: i
+
+        if(x % re <= 0._${k1}$) call error_stop("Error(l_gamma): Logrithm of " &
+            //"Gamma function complex augument must have a positive real part")
+
+        q0 = x % re - HALF; p = x % im
+       #:if k1 == "sp"
+        q = q0 + RD; theta1 = atan2(p, q); lgr = HALF * log(q * q + p * p)
+        tr = sqepi + q0 * (lgr - 1.0_qp) - theta1 * p
+        ti = p * (lgr - 1.0_qp) + theta1 * q0
+        sumr = DD(0); sumi = 0.0_qp
+        do i = 1, 10
+            t0 = q0 - HALF + i
+            t1 = t0 * t0 + p * p; t1 = 1.0_qp / t1
+            sumr = sumr + DD(i) * t0 * t1
+            sumi = sumi + DD(i) * p * t1
+        end do
+        sumi = - sumi
+        theta2 = atan2(sumi, sumr)
+        tr = tr + HALF * log(sumr * sumr + sumi * sumi)
+        ti = ti + theta2
+       #:else
+        q = q0 + RQ; theta1 = atan2(p, q); lgr = HALF * log(q * q + p * p)
+        tr = sqepi + q0 * (lgr - 1.0_qp) - theta1 * p
+        ti = p * (lgr - 1.0_qp) + theta1 * q0
+        sumr = DQ(0); sumi = 0.0_qp
+        do i = 1, 21
+            t0 = q0 - HALF + i
+            t1 = t0 * t0 + p * p; t1 = 1.0_qp / t1
+            sumr = sumr + DQ(i) * t0 * t1
+            sumi = sumi + DQ(i) * p * t1
+        end do
+        sumi = - sumi
+        theta2 = atan2(sumi, sumr)
+        tr = tr + HALF * log(sumr * sumr + sumi * sumi)
+        ti = ti + theta2
+       #:endif
+        res = cmplx(tr, ti, kind = ${k1}$)
+    end function l_gamma_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function l_factorial_1_${t1[0]}$${k1}$(n) result(res)
+    !
+    ! Log(n!) with single precision result, n is integer
+    !
+        ${t1}$, intent(in) :: n
+        real :: res
+
+        if(n < 0) call error_stop("Error(l_factorial): Factorial function"     &
+            //" augument must be non-negative")
+        select case(n)
+        case (0)
+            res = 0.0
+        case (1)
+            res = 0.0
+        case (2:)
+            res = loggamma(real(n + 1, dp))
+        end select
+    end function l_factorial_1_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+    impure elemental function l_factorial_${t1[0]}$${k1}$${k2}$(n,x) result(res)
+    !
+    ! Log(n!) with required prescision for result, n is integer, x is a real
+    ! for specified kind
+    !
+        ${t1}$, intent(in) :: n
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+
+        if(n < 0) call error_stop("Error(l_factorial): Factorial function"     &
+                  //" augument must be non-negative")
+        select case(n)
+        case (0)
+            res = 0.0_${k2}$
+        case (1)
+            res = 0.0_${k2}$
+        case (2:)
+            res = loggamma(real(n + 1, kind = ${k2}$))
+        end select
+    end function l_factorial_${t1[0]}$${k1}$${k2}$
+
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+      #:if k1 == "sp"
+        ! single precision use double variables
+        #:set k2 = "dp"
+      #:else
+        ! double/quadruple precision use quadruple variables
+        #:set k2 = "qp"
+      #:endif
+    impure elemental function gpx_${t1[0]}$${k1}$(s, x) result(res)
+    !
+    ! Approximation of incomplete gamma G function with real auguments s.
+    !
+    ! Based on Rémy Abergel and Lionel Moisan "Algorithm 1006, Fast and
+    ! Accurate Evaluation of a Generalized Incomplete Gamma Function", ACM
+    ! Transactions on Mathematical Software, March 2020.
+    !
+    ! Fortran 90 program by Jim-215-Fisher
+    !
+        ${t1}$, intent(in) :: x, s
+        real(${k2}$) :: res
+        ${t1}$ :: p_lim
+        real(${k2}$) :: a, b, g, c, d, y, dm
+        integer :: n
+
+        #:if k2 == "dp"
+        dm = dmd
+        #:else
+        dm = dmq
+        #:endif
+        if(x < -9.0_${k1}$) then
+            p_lim = 5.0_${k1}$ * (sqrt(abs(x)) - 1.0_${k1}$)
+        elseif(x >= -9.0_${k1}$ .and. x <= 0.0_${k1}$) then
+            p_lim = 0.0_${k1}$
+        else
+            p_lim = x
+        endif
+        if(x < 0._${k1}$) then
+            call error_stop("Error(gpx): Incomplete gamma function with"       &
+                //" negative x must come with integer of s")
+        elseif(s >= p_lim) then
+            a = 1.0_${k2}$
+            b = s
+            g = a / b
+            c = a / dm
+            d = 1.0_${k2}$ / b
+            n = 2
+            do
+                if(mod(n, 2) == 0) then
+                    a = (1 - s - n / 2) * x
+                else
+                    a = (n / 2) * x
+                end if
+                b = s - 1 + n
+                d =  d * a + b
+                if(d == 0.0_${k2}$) d = dm
+                c = b + a / c
+                if(c == 0.0_${k2}$) c = dm
+                d = 1.0_${k2}$ / d
+                y = c * d
+                g = g * y
+                n = n + 1
+                if(abs(y - 1.0_${k2}$) < tol_${k2}$) exit
+            end do
+        else
+            a = 1.0_${k2}$
+            b = x + 1 - s
+            g = a / b
+            c = a / dm
+            d = 1.0_${k2}$ / b
+            n = 2
+            do
+                a = -(n - 1) * (n - 1 - s)
+                b = b + 2.0_${k2}$
+                d = d * a + b
+                if(d == 0.0_${k2}$) d = dm
+                c = b + a / c
+                if(c == 0.0_${k2}$) c = dm
+                d = 1.0_${k2}$ / d
+                y = c * d
+                g = g * y
+                n = n + 1
+                if(abs(y - 1.0_${k2}$) < tol_${k2}$) exit
+            end do
+        endif
+        res = g
+    end function gpx_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+        #:if k2 == "sp"
+          ! single precision use double variables
+          #:set k3 = "dp"
+        #:else
+          ! double/quadruple precision use quadruple variables
+          #:set k3 = "qp"
+        #:endif
+    impure elemental function gpx_${t1[0]}$${k1}$${k2}$(s, x) result(res)
+    !
+    ! Approximation of incomplete gamma G function with integer augument s.
+    !
+    ! Based on Rémy Abergel and Lionel Moisan "Algorithm 1006, Fast and
+    ! Accurate Evaluation of a Generalized Incomplete Gamma Function", ACM
+    ! Transactions on Mathematical Software, March 2020.
+    !
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        real(${k3}$) :: res
+        ${t2}$ :: p_lim
+        real(${k3}$) :: a, b, g, c, d, y, dm
+        integer :: n
+
+        #:if k3 == "dp"
+        dm = dmd
+        #:else
+        dm = dmq
+        #:endif
+        if(x < -9.0_${k2}$) then
+            p_lim = 5.0_${k2}$ * (sqrt(abs(x)) - 1.0_${k2}$)
+        elseif(x >= -9.0_${k2}$ .and. x <= 0.0_${k2}$) then
+            p_lim = 0.0_${k2}$
+        else
+            p_lim = x
+        endif
+        if(real(s, ${k2}$) >= p_lim) then
+            a = 1.0_${k3}$
+            b = s
+            g = a / b
+            c = a / dm
+            d = 1.0_${k3}$ / b
+            n = 2
+            do
+                if(mod(n, 2) == 0) then
+                    a = (1 - s - n / 2) * x
+                else
+                    a = (n / 2) * x
+                end if
+                b = s - 1 + n
+                d =  d * a + b
+                if(d == 0.0_${k3}$) d = dm
+                c = b + a / c
+                if(c == 0.0_${k3}$) c = dm
+                d = 1.0_${k3}$ / d
+                y = c * d
+                g = g * y
+                n = n + 1
+                if(abs(y - 1.0_${k3}$) < tol_${k3}$) exit
+            end do
+        elseif(x >= 0.0_${k2}$) then
+            a = 1.0_${k3}$
+            b = x + 1 - s
+            g = a / b
+            c = a / dm
+            d = 1.0_${k3}$ / b
+            n = 2
+            do
+                a = -(n - 1) * (n - 1 - s)
+                b = b + 2.0_${k3}$
+                d = d * a + b
+                if(d == 0.0_${k3}$) d = dm
+                c = b + a / c
+                if(c == 0.0_${k3}$) c = dm
+                d = 1.0_${k3}$ / d
+                y = c * d
+                g = g * y
+                n = n + 1
+                if(abs(y - 1.0_${k3}$) < tol_${k3}$) exit
+            end do
+        else
+            a = -x
+            c = 1.0_${k3}$ / a
+            d = s - 1
+            b = c * (a - d)
+            n = 1
+            do
+                c = d * (d - 1.0_${k3}$) / (a * a)
+                d = d - 2.0_${k3}$
+                y = c * ( a - d)
+                b = b + y
+                n = n + 1
+                if(int(n, ${k1}$) > (s - 2_${k1}$) / 2_${k1}$ .or. y < b *     &
+                    tol_${k3}$) exit
+            end do
+            if(y >= b * tol_${k3}$ .and. mod(s, 2_${k1}$) /= 0_${k1}$)         &
+                       b = b + d * c / a
+            g = ((-1) ** s * exp(-a + loggamma(real(s, ${k3}$)) - (s - 1) *    &
+                log(a)) + b ) / a
+        endif
+        res = g
+    end function gpx_${t1[0]}$${k1}$${k2}$
+
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in IR_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+       #:if not ((t1[0] == "r") and (k1 != k2))
+        #:if k2 == "sp"
+          ! single precision use double variables
+          #:set k3 = "dp"
+        #:else
+          ! double/quadruple precision use quadruple variables
+          #:set k3 = "qp"
+        #:endif
+    impure elemental function ingamma_low_${t1[0]}$${k1}$${k2}$(s, x)          &
+        result(res)
+    !
+    ! Approximation of lower incomplete gamma function.
+    !
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+        real(${k3}$) :: s1, y, xx, ss
+
+        #:if t1[0] == "i"
+        if(s < 0_${k1}$) call error_stop("Error(ingamma_low): Lower"           &
+            //" incomplete gamma function input s value must be greater than 0")
+        #:else
+        if(s < 0._${k1}$) call error_stop("Error(ingamma_low): Lower"          &
+            //" incomplete gamma function input s value must be greater than 0")
+        #:endif
+
+        xx = x; ss = s
+        if(x == 0.0_${k2}$) then
+            res = 0.0
+        elseif(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
+            s1 = -xx + ss * log(xx)
+            res = gpx(s,x) * exp(s1)
+        elseif(x > real(s, ${k2}$)) then
+            s1 = loggamma(ss)
+            y = 1.0_${k3}$ - exp(-xx + ss * log(xx) - s1) * gpx(s,x)
+            res = exp(s1 + log(y))
+        else
+            s1 = -xx + ss * log(-xx)
+            res = (-1) ** s * gpx(s,x) * exp(s1)
+        endif
+    end function ingamma_low_${t1[0]}$${k1}$${k2}$
+        #:endif
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in IR_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+        #:if not ((t1[0] == "r") and (k1 != k2))
+          #:if k2 == "sp"
+            ! single precision use double variables
+            #:set k3 = "dp"
+          #:else
+            ! double/quadruple precision use quadruple variables
+            #:set k3 = "qp"
+          #:endif
+    impure elemental function l_ingamma_low_${t1[0]}$${k1}$${k2}$(s, x)        &
+        result(res)
+
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+        real(${k3}$) :: s1, y, xx, ss
+
+        #:if t1[0] == "i"
+        if(s < 0_${k1}$) call error_stop("Error(l_ingamma_low): Logrithm of "  &
+            //"lower incomplete gamma function s value must be non-negative")
+        #:else
+        if(s < 0.0_${k1}$) call error_stop("Error(l_ingamma_low): Logrithm of "&
+            //"lower incomplete gamma function s value must be non-negative")
+        #:endif
+        if(x < 0.0_${k2}$) call error_stop("Error(l_ingamma_low): Logrithm of"&
+            //" lower incomplete gamma function is not defined at x < 0")
+
+        xx = x; ss = s
+        if(x == 0.0_${k2}$) then
+            res = 0.0_${k2}$
+        elseif(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
+            s1 = -xx + ss * log(xx)
+            res = log(gpx(s,x)) + s1
+        elseif(x > real(s, ${k2}$)) then
+            s1 = loggamma(ss)
+            y = 1.0_${k3}$ - exp(-xx + ss * log(xx) - s1) * gpx(s,x)
+            res = s1 + log(y)
+        endif
+    end function l_ingamma_low_${t1[0]}$${k1}$${k2}$
+
+        #:endif
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in IR_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+        #:if not ((t1[0] == "r") and (k1 != k2))
+          #:if k2 == "sp"
+            ! single precision use double variables
+            #:set k3 = "dp"
+          #:else
+            ! double/quadruple precision use quadruple variables
+            #:set k3 = "qp"
+          #:endif
+    impure elemental function ingamma_up_${t1[0]}$${k1}$${k2}$(s, x)           &
+        result(res)
+    !
+    ! Approximation of upper incomplete gamma function
+    !
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+        real(${k3}$) :: s1, y, xx, ss
+
+        #:if t1[0] == "i"
+        if(s < 0_${k1}$) call error_stop("Error(ingamma_up): Upper"            &
+          //" incomplete gamma function input s value must be greater than 0")
+        #:else
+        if(s < 0._${k1}$) call error_stop("Error(ingamma_up): Upper"           &
+          //" incomplete gamma function input s value must be greater than 0")
+        #:endif
+
+        xx = x; ss = s
+        if(x == 0.0_${k2}$) then
+            res = 0.0
+        elseif(x > real(s, ${k2}$)) then
+            s1 = -xx + ss * log(xx)
+            res = gpx(s,x) * exp(s1)
+        elseif(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
+            s1 = loggamma(ss)
+            y = 1.0_${k3}$ - exp(-xx + ss * log(xx) - s1) * gpx(s,x)
+            res = exp(s1 + log(y))
+        else
+            s1 = loggamma(ss)
+            y = -xx + ss * log(-xx) - s1
+            y = 1.0_${k3}$ - (-1) ** s * gpx(s,x) * exp(y)
+            res = exp(s1 + log(y))
+        endif
+    end function ingamma_up_${t1[0]}$${k1}$${k2}$
+
+        #:endif
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in IR_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+        #:if not ((t1[0] == "r") and ( k1 != k2))
+          #:if k2 == "sp"
+            ! single precision use double variables
+            #:set k3 = "dp"
+          #:else
+            ! double/quadruple precision use quadruple variables
+            #:set k3 = "qp"
+          #:endif
+    impure elemental function l_ingamma_up_${t1[0]}$${k1}$${k2}$(s, x)         &
+        result(res)
+
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+        real(${k3}$) :: s1, y, xx, ss
+
+        #:if t1[0] == "i"
+        if(s < 0_${k1}$) call error_stop("Error(l_ingamma_up): Logrithm of "   &
+            //"upper incomplete gamma function s value must be non-negative")
+        #:else
+        if(s < 0.0_${k1}$) call error_stop("Error(l_ingamma_up): Logrithm of " &
+            //"upper incomplete gamma function s value must be non-negative")
+        #:endif
+        if(x < 0.0_${k2}$) call error_stop("Error(l_ingamma_up): Logrithm of"  &
+            //" upper incomplete gamma function is not defined at x < 0")
+
+        xx = x; ss = s
+        if(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
+            s1 = loggamma(ss)
+            y = 1.0_${k3}$ - exp(-xx + ss * log(xx) - s1) * gpx(s,x)
+            res = s1 + log(y)
+        elseif(x > real(s, ${k2}$)) then
+            s1 = -xx + ss * log(xx)
+            res = log(gpx(s,x)) + s1
+        endif
+    end function l_ingamma_up_${t1[0]}$${k1}$${k2}$
+
+        #:endif
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in IR_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+        #:if not ((t1[0] == "r") and (k1 != k2))
+          #:if k2 == "sp"
+            ! single precision use double variables
+            #:set k3 = "dp"
+          #:else
+            ! double/quadruple precision use quadruple variables
+            #:set k3 = "qp"
+          #:endif
+    impure elemental function regamma_p_${t1[0]}$${k1}$${k2}$(s, x) result(res)
+    !
+    ! Approximation of regularized incomplet gamma function P(s,x)
+    !
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+        real(${k3}$) :: s1, xx, ss
+
+        #:if t1[0] == "i"
+        if(s < 0_${k1}$) call error_stop("Error(regamma_p): Regularized gamma" &
+            //"_p function input s value must be non-negative")
+        #:else
+        if(s < 0.0_${k1}$) call error_stop("Error(regamma_p): Regularized "    &
+            //"gamma_p function input s value must be non-negative")
+        #:endif
+        if(x < 0.0_${k2}$) call error_stop("Error(regamma_p): Regularized "    &
+            //"gamma_p function is not defined at x < 0")
+
+        xx = x; ss = s
+        s1 = -xx + ss * log(xx) - loggamma(ss)
+        if(x == 0.0_${k2}$) then
+            res = 0.0_${k3}$
+        elseif(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
+            res = exp(log(gpx(s,x)) + s1)
+        elseif(x > real(s, ${k2}$)) then
+            res = 1.0_${k3}$ - exp(s1 + log(gpx(s,x)))
+        endif
+    end function regamma_p_${t1[0]}$${k1}$${k2}$
+
+        #:endif
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in IR_KINDS_TYPES
+      #:for k2, t2 in REAL_KINDS_TYPES
+        #:if not ((t1[0] == "r") and (k1 != k2))
+          #:if k2 == "sp"
+            ! single precision use double variables
+            #:set k3 = "dp"
+          #:else
+            ! double/quadruple precision use quadruple variables
+            #:set k3 = "qp"
+          #:endif
+    impure elemental function regamma_q_${t1[0]}$${k1}$${k2}$(s, x)            &
+        result(res)
+    !
+    ! Approximation of regularized incomplet gamma function Q(s,x)
+    !
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${t2}$ :: res
+        real(${k3}$) :: s1, xx, ss
+
+        #:if t1[0] == "i"
+        if(s < 0_${k1}$) call error_stop("Error(regamma_q): Regularized gamma" &
+            //"_q function input s value must be non-negative")
+        #:else
+        if(s < 0.0_${k1}$) call error_stop("Error(regamma_q): Regularized "    &
+            //"gamma_q function input s value must be non-negative")
+        #:endif
+        if(x < 0.0_${k2}$) call error_stop("Error(regamma_q): Regularized "    &
+            //"gamma_q function is not defined at x < 0")
+
+        xx = x; ss = s
+        s1 = -xx + ss * log(xx) - loggamma(ss)
+        if(x == 0.0_${k2}$) then
+            res = 1.0_${k3}$
+        elseif(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
+            res = 1.0_${k3}$ - exp(s1 + log(gpx(s,x)))
+        elseif(x > real(s, ${k2}$)) then
+            res = exp(log(gpx(s,x)) + s1)
+        endif
+     end function regamma_q_${t1[0]}$${k1}$${k2}$
+
+         #:endif
+      #:endfor
+    #:endfor
+
+
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    impure elemental function beta_${t1[0]}$${k1}$(a, b) result(res)
+    !
+    ! Evaluation of beta function through gamma function
+    !
+        ${t1}$, intent(in) :: a, b
+        ${t1}$ :: res
+
+        #:if t1[0] == "r"
+        if(a <= 0._${k1}$ .or. b <= 0._${k1}$) call error_stop("Error(beta):"  &
+            //" Beta function auguments a, b values must be greater than 0")
+        #:else
+        if(a % re <= 0._${k1}$ .or. b % re <= 0._${k1}$)                       &
+            call error_stop("Error(beta): Beta function complex auguments"     &
+               //" a, b must have a positive real part")
+        #:endif
+        res = exp(loggamma(a) + loggamma(b) - loggamma(a + b))
+    end function beta_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    impure elemental function l_beta_${t1[0]}$${k1}$(a, b) result(res)
+    !
+    ! Logrithm of beta function through log(gamma)
+    !
+        ${t1}$, intent(in) :: a, b
+        ${t1}$ :: res
+
+        #:if t1[0] == "r"
+        if(a <= 0._${k1}$ .or. b <= 0._${k1}$) call error_stop("Error(l_beta):"&
+            //" Beta function auguments a, b values must be greater than 0")
+        #:else
+        if(a % re <= 0._${k1}$ .or. b % re <= 0._${k1}$)                       &
+            call error_stop("Error(l_beta): log_beta function complex"         &
+               //" auguments a, b must have a positive real part")
+        #:endif
+        res = loggamma(a) + loggamma(b) - loggamma(a + b)
+    end function l_beta_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+      #:if k1 == "sp"
+        ! single precision use double variables
+        #:set k2 = "dp"
+      #:else
+        ! double/quadruple precision use quadruple variables
+        #:set k2 = "qp"
+      #:endif
+    impure elemental function inbeta_${t1[0]}$${k1}$(x, a, b) result(res)
+    !
+    ! Evaluation of incomplete beta function using continued fractions
+    ! "Computation of Special Functions" by S. Zhang and J. Jin, 1996
+    !
+        ${t1}$, intent(in) :: x, a, b
+        ${t1}$ :: res, s0
+        integer :: n, k
+        real(${k2}$) :: an, bn, g, c, d, y, ak, ak2, dm
+
+        #:if k2 == "dp"
+        dm = dmd
+        #:else
+        dm = dmq
+        #:endif
+        if(a <= 0._${k1}$ .or. b <= 0._${k1}$) call error_stop("Error(inbeta):"&
+            //" Incomplete beta function auguments a, b must be positive")
+        if(x < 0.0_${k1}$ .or. x > 1.0_${k1}$) call error_stop("Error(inbeta):"&
+            //" Incomplete beta function augument x must be in range [0,1]")
+        if(x == 0.0_${k1}$) then
+            res = 0.0_${k1}$
+            return
+        elseif(x == 1.0_${k1}$) then
+            res = beta(a, b)
+            return
+        end if
+        s0 = (a + 1) / (a + b + 2)
+        an = 1.0_${k2}$
+        bn = 1.0_${k2}$
+        g = an / bn
+        c = an / dm
+        d = 1.0_${k2}$ / bn
+        n = 1
+        if(x < s0) then
+            do
+                if(mod(n, 2) == 0) then
+                    k = n / 2; ak = a + 2 * k
+                    an = real(k, ${k2}$) * x * (b - k) / (ak * ak - ak)
+                else
+                    k = (n - 1) / 2; ak = a + k; ak2 = ak + k
+                    an = - (ak + b) * ak * x / (ak2 * ak2 + ak2)
+                endif
+                d = d * an + bn
+                if(d == 0.0_${k2}$) d = dm
+                c = bn + an / c
+                if(c == 0.0_${k2}$) c = dm
+                d = 1.0_${k2}$ / d
+                y = c * d
+                g = g * y
+                n = n + 1
+                if(abs(y - 1.0_${k2}$) < tol_${k2}$) exit
+            end do
+            g = exp(a * log(x) + b * log(1.0_${k2}$ - x) + log(g) -log(a))
+        else
+            do
+                if(mod(n, 2) == 0) then
+                    k = n / 2; ak = b + 2 * k
+                    an = k * (1.0_${k2}$ - x) * (a - k) / (ak * ak - ak)
+                else
+                    k = (n - 1) / 2; ak = b + k; ak2 = ak + k
+                    an = - ak * (1.0_${k2}$ - x) * (a + ak) / (ak2 * ak2 + ak2)
+                endif
+                d = d * an + bn
+                if(d == 0.0_${k2}$) d = dm
+                c = bn + an / c
+                if(c == 0.0_${k2}$) c = dm
+                d = 1.0_${k2}$ / d
+                y = c * d
+                g = g * y
+                n = n + 1
+                if(abs(y - 1.0_${k2}$) < tol_${k2}$) exit
+            end do
+            g = a * log(x) + b * log(1.0_${k2}$ - x) + log(g) - log(b)
+            g = beta(a, b) - exp(g)
+        endif
+        res = g
+    end function inbeta_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in REAL_KINDS_TYPES
+    impure elemental function regbeta_${t1[0]}$${k1}$(x, a, b) result(res)
+
+        ${t1}$, intent(in) :: x, a, b
+        ${t1}$ :: res
+
+        if(a <= 0._${k1}$ .or. b <= 0._${k1}$) call error_stop("Error(regbeta)"&
+            //": Regularized incomplete beta function auguments a, b must be " &
+            //"positive")
+        if(x < 0.0_${k1}$ .or. x > 1.0_${k1}$) call error_stop("Error(regbeta)"&
+            //": Regularized incomplete beta function augument x must be in "  &
+            //"range [0,1]")
+        if(x == 0.0_${k1}$) then
+            res = 0.0_${k1}$
+        elseif(x == 1.0_${k1}$) then
+            res = 1.0_${k1}$
+        else
+            res = incomplete_beta(x, a, b) / beta(a, b)
+        end if
+    end function regbeta_${t1[0]}$${k1}$
+
+    #:endfor
+end module statislib_special

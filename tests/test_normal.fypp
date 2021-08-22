@@ -1,0 +1,203 @@
+#:include "common.fypp"
+#:set RC_KINDS_TYPES = REAL_KINDS_TYPES + CMPLX_KINDS_TYPES
+program test_distribution_normal
+    use stdlib_kinds
+    use stdlib_error, only : check
+    use stdlib_stats_distribution_PRNG, only : random_seed
+    use statislib_normal, nor_rvs => normal_distribution_rvs,  &
+                          nor_pdf => normal_distribution_pdf,  &
+                          nor_cdf => normal_distribution_cdf
+
+    implicit none
+    #:for k1, t1 in REAL_KINDS_TYPES
+    ${t1}$, parameter :: ${k1}$tol = 1000 * epsilon(1.0_${k1}$)
+    #:endfor
+    logical ::  warn = .true.
+    integer :: put, get
+    real :: x(2,3,4),a(2,3,4), b(2,3,4)
+    complex :: loc, scale
+
+    put = 12345678
+    call random_seed(put, get)
+
+    call test_normal_random_generator
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    call test_nor_rvs_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    call test_nor_pdf_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    call test_nor_cdf_${t1[0]}$${k1}$
+    #:endfor
+
+
+
+contains
+
+
+    subroutine test_normal_random_generator
+        integer, parameter :: num = 10000000
+        integer, parameter :: array_size = 1000
+        integer :: i, j, freq(0:array_size - 1)
+        real(dp) :: chisq, expct
+
+        print *, ""
+        print *, "Test normal random generator with chi-squared"
+        freq = 0
+        do i = 1, num
+            j = array_size * (1 + erf(nor_rvs(0.0, 1.0) / sqrt(2.0))) / 2.0
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        expct = num / array_size
+        do i = 0, array_size - 1
+           chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                    //" 1143.92"
+        write(*,*) "Chi-squared for normal random generator is : ", chisq
+        call check((chisq < 1143.9), &
+               msg="normal randomness failed chi-squared test", warn=warn)
+    end subroutine test_normal_random_generator
+
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    subroutine test_nor_rvs_${t1[0]}$${k1}$
+        ${t1}$ :: res(10), loc, scale
+        integer :: i, n, k = 5
+        integer :: seed, get
+        #:if t1[0] == "r"
+        ${t1}$ :: ans(10) = [2.66708039318040679432897377409972250_${k1}$,      &
+                             2.36030794936128329730706809641560540_${k1}$,      &
+                             1.27712218793084242296487218482070602_${k1}$,      &
+                             -2.39132544130814794769435138732660562_${k1}$,     &
+                             1.72566595106028652928387145948363468_${k1}$,      &
+                             -1.50621775537767632613395107910037041_${k1}$,     &
+                             2.13518835158352082714827702147886157_${k1}$,      &
+                             -0.636788253742142318358787633769679815_${k1}$,    &
+                             2.48600787778845799813609573902795091_${k1}$,      &
+                             -3.03711473837981227319460231228731573_${k1}$]
+        #:else
+        ${t1}$ :: ans(10) = [(2.12531029488530509574673033057479188_${k1}$,     &
+                              1.46507698734032082432676702410390135_${k1}$),    &
+                             (1.08284164094813181722365413861552952_${k1}$,     &
+                             0.277168639672963013076412153168348595_${k1}$),    &
+                             (1.41924946329521489696290359461272601_${k1}$,     &
+                             0.498445561155580918466512230224907398_${k1}$),    &
+                             (1.72639126368764062036120776610914618_${k1}$,     &
+                             0.715802936564464420410303091557580046_${k1}$),    &
+                             (1.98950590834134349860207180427096318_${k1}$,     &
+                             0.115721315405046931701349421928171068_${k1}$),    &
+                            (-1.16929014824793620075382705181255005_${k1}$,     &
+                             0.250744737486995217246033007540972903_${k1}$),    &
+                             (1.57160542831869509683428987045772374_${k1}$,     &
+                             0.638282596371312238581197107123443857_${k1}$),    &
+                            (-1.36106107654239116833139178197598085_${k1}$,     &
+                             0.166259201494369124318950525776017457_${k1}$),    &
+                             (1.13403096805387920698038328737311531_${k1}$,     &
+                              1.04232618148691447146347854868508875_${k1}$),    &
+                            (-1.68220535920475811053620418533682823_${k1}$,     &
+                             1.63361446685040256898702182297711261_${k1}$)]
+        #:endif
+        
+        print *, "Test normal_distribution_rvs_${t1[0]}$${k1}$"
+        seed = 25836914
+        call random_seed(seed, get)
+        #:if t1[0] == "r"
+        loc = 0.5_${k1}$; scale = 2.0_${k1}$
+        #:else
+        loc = (0.5_${k1}$, 1.0_${k1}$); scale = (1.5_${k1}$, 0.5_${k1}$)
+        #:endif
+        do i = 1, k
+           res(i) = nor_rvs(loc, scale)     ! 2 dummies
+        end do
+        res(6:10) = nor_rvs(loc, scale, k)  ! 3 dummies
+        call check(all(abs(res - ans) < ${k1}$tol),                            &
+            msg="normal_distribution_rvs_${t1[0]}$${k1}$ failed", warn=warn)
+    end subroutine test_nor_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+    
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    subroutine test_nor_pdf_${t1[0]}$${k1}$
+        ${t1}$ :: x1, x2(3,4), loc, scale
+        integer :: i, n, k = 5
+        integer :: seed, get
+        real :: res(3,5)
+        #:if t1[0] == "r"
+        real :: ans(15) = [0.215050772, 0.215050772, 0.215050772, 0.200537622,  &
+                           5.66161536E-02, 0.238986954, 0.265935957,0.262147546,&
+                           0.249866411, 3.98721099E-02, 0.265902370,0.161311597,&
+                           0.249177739, 0.237427220, 0.155696079]
+        #:else
+        real :: ans(15) = [0.129377320, 0.129377320,0.129377320,4.05915640E-02, &
+                           0.209143385,2.98881028E-02, 0.128679410, 0.177484736,&
+                           3.82205322E-02, 7.09915683E-02, 4.56126593E-02,      &
+                           6.57454133E-02,0.165161043,3.86104807E-02,0.196922958]
+        #:endif
+        
+        print *, "Test normal_distribution_pdf_${t1[0]}$${k1}$"
+        seed = 741852963
+        call random_seed(seed, get)
+        #:if t1[0] == "r"
+        loc = -0.5_${k1}$; scale = 1.5_${k1}$
+        #:else
+        loc = (-0.5_${k1}$, 0.5_${k1}$); scale = (0.5_${k1}$, 1.5_${k1}$)
+        #:endif
+        x1 = nor_rvs(loc, scale)
+        x2 = reshape(nor_rvs(loc, scale, 12), [3,4])
+        res(:,1) = nor_pdf(x1, loc, scale)
+        res(:, 2:5) = nor_pdf(x2, loc, scale)
+        call check(all(abs(res - reshape(ans, [3,5])) < ${k1}$tol),            &
+            msg="normal_distribution_pdf_${t1[0]}$${k1}$ failed", warn=warn)
+    end subroutine test_nor_pdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in RC_KINDS_TYPES
+    subroutine test_nor_cdf_${t1[0]}$${k1}$
+        ${t1}$ :: x1, x2(3,4), loc, scale
+        integer :: i, n
+        integer :: seed, get
+        real :: res(3,5)
+        #:if t1[0] == "r"
+        real :: ans(15) = [7.50826299E-02, 7.50826299E-02, 7.50826299E-02,      &
+                           0.143119827, 0.241425425, 0.284345865, 0.233239830,  &
+                          0.341059506,0.353156865,6.81066737E-02,4.38792333E-02,&
+                           0.763679624, 0.363722175, 0.868187129, 0.626506805]
+        #:else
+        real :: ans(15) = [1.07458131E-02, 1.07458131E-02, 1.07458131E-02,      &
+                           6.86483234E-02, 7.95486644E-02, 2.40523387E-02,      &
+                           3.35096754E-02,0.315778911,0.446311295, 0.102010213, &
+                           7.66918957E-02, 0.564691007, 0.708769500,            &
+                           6.40553832E-02, 5.39999157E-02]
+        #:endif
+        
+        print *, "Test normal_distribution_cdf_${t1[0]}$${k1}$"
+        seed = 369147582
+        call random_seed(seed, get)
+        #:if t1[0] == "r"
+        loc = -1.0_${k1}$; scale = 2.0_${k1}$
+        #:else
+        loc = (-1.0${k1}$, 1.0${k1}$); scale = (1.7${k1}$, 2.4${k1}$)
+        #:endif
+        x1 = nor_rvs(loc, scale)
+        x2 = reshape(nor_rvs(loc, scale, 12), [3,4])
+        res(:,1) = nor_cdf(x1, loc, scale)
+        res(:, 2:5) = nor_cdf(x2, loc, scale)
+        call check(all(abs(res - reshape(ans,[3,5])) < ${k1}$tol),             &
+            msg="normal_distribution_cdf_${t1[0]}$${k1}$ failed", warn=warn)
+    end subroutine test_nor_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+end program test_distribution_normal
