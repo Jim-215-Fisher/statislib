@@ -183,7 +183,7 @@ contains
         ${t1}$ :: res
         real(${k1}$) :: tr, ti
 
-        tr = exp_dist_rvs_r${k1}$(lamda % re )
+        tr = exp_dist_rvs_r${k1}$(lamda % re)
         ti = exp_dist_rvs_r${k1}$(lamda % im)
         res = cmplx(tr, ti, kind=${k1}$)
     end function exp_dist_rvs_${t1[0]}$${k1}$
@@ -250,11 +250,14 @@ contains
         ${t1}$, intent(in) :: lamda
         integer, intent(in) :: array_size
         ${t1}$ :: res(array_size)
-        real(${k1}$) :: tr(array_size), ti(array_size)
+        real(${k1}$) :: tr, ti
+        integer :: i
 
-        tr = exp_dist_rvs_array_r${k1}$(lamda % re, array_size)
-        ti = exp_dist_rvs_array_r${k1}$(lamda % im, array_size)
-        res = cmplx(tr, ti, kind=${k1}$)
+        do i = 1, array_size
+            tr = exp_dist_rvs_r${k1}$(lamda % re)
+            ti = exp_dist_rvs_r${k1}$(lamda % im)
+            res(i) = cmplx(tr, ti, kind=${k1}$)
+        end do
     end function exp_dist_rvs_array_${t1[0]}$${k1}$
 
     #:endfor

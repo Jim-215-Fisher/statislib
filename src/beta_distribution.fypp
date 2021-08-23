@@ -172,11 +172,14 @@ contains
         ${t1}$, intent(in) :: alpha, beta
         integer, intent(in) :: array_size
         ${t1}$ :: res(array_size)
-        real(${k1}$) :: tr(array_size), ti(array_size)
+        real(${k1}$) :: tr, ti
+        integer :: i
 
-        tr = beta_dist_rvs_array_r${k1}$(alpha % re, beta % re, array_size)
-        ti = beta_dist_rvs_array_r${k1}$(alpha % im, beta % im, array_size)
-        res = cmplx(tr, ti, kind = ${k1}$)
+        do i = 1, array_size
+            tr = beta_dist_rvs_r${k1}$(alpha % re, beta % re)
+            ti = beta_dist_rvs_r${k1}$(alpha % im, beta % im)
+            res(i) = cmplx(tr, ti, kind = ${k1}$)
+        end do
     end function beta_dist_rvs_array_${t1[0]}$${k1}$
 
     #:endfor

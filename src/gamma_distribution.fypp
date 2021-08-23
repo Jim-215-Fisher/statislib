@@ -203,13 +203,16 @@ contains
         ${t1}$, intent(in), optional :: beta
         integer, intent(in) :: array_size
         ${t1}$ :: res(array_size), bt
-        real(${k1}$) :: tr(array_size), ti(array_size)
+        real(${k1}$) :: tr, ti
+        integer :: i
 
         bt = (1.0_${k1}$, 1.0_${k1}$)
         if(present(beta)) bt = beta
-        tr = gamma_dist_rvs_array_r${k1}$(alpha % re, bt % re, array_size)
-        ti = gamma_dist_rvs_array_r${k1}$(alpha % re, bt % re, array_size)
-        res = cmplx(tr, ti, kind=${k1}$)
+        do i = 1, array_size
+            tr = gamma_dist_rvs_r${k1}$(alpha % re, bt % re)
+            ti = gamma_dist_rvs_r${k1}$(alpha % im, bt % im)
+            res(i) = cmplx(tr, ti, kind=${k1}$)
+        end do
     end function gamma_dist_rvs_array_${t1[0]}$${k1}$
 
     #:endfor
