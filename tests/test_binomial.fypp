@@ -1,0 +1,168 @@
+#:include "common.fypp"
+program test_distribution_binomial
+    use stdlib_kinds
+    use stdlib_error, only : check
+    use stdlib_stats_distribution_PRNG, only : random_seed
+    use statislib_binomial,                                                    &
+                                        binom_rvs => binomial_distribution_rvs,&
+                                        binom_pmf => binomial_distribution_pmf,&
+                                        binom_cdf => binomial_distribution_cdf
+    use statislib_special, only : log_factorial
+    
+    implicit none
+    #:for k1, t1 in REAL_KINDS_TYPES
+    ${t1}$, parameter :: ${k1}$tol = 1000 * epsilon(1.0_${k1}$)
+    #:endfor
+    logical ::  warn = .true.
+    integer :: put, get
+    
+    put = 1234567
+    call random_seed(put, get)
+ 
+    call test_binomial_random_generator
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_binomial_rvs_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_binomial_pmf_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_binomial_cdf_${t1[0]}$${k1}$
+    #:endfor
+
+
+
+contains
+
+    subroutine test_binomial_random_generator
+        integer, parameter :: num = 10000000
+        integer, parameter :: arry_size = 1000
+        integer :: i, j, freq(0:array_size - 1), n
+        real(dp) :: chisq, expct
+        real :: p
+
+        print *, ""
+        print *, "Test binomial random generator with chi-squared"
+        freq = 0; n = 100; p = 0.34
+        do i = 1, num
+            j = binom_rvs(n, p)
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        do i = 0, min(array_size - 1, n)
+           expct = exp(log_factorial(n) + i * log(p) + (n - i) * log(1.- p)    &
+                   - log_factorial(i) - log_factorial(n - i) + log(real(num)))
+           if(expct < 1.0e-7) cycle
+           chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                   //" 1143.92"
+        write(*,*) "Chi-squared for binomial random generator is : ", chisq
+        call check((chisq < 1143.9),                                           &
+               msg="binomial randomness failed chi-squared test", warn=warn)
+    end subroutine test_binomial_random_generator
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_binomial_rvs_${t1[0]}$${k1}$
+        ${t1}$ :: res(20), n
+        integer :: i
+        real :: p
+        integer :: seed, get
+        ${t1}$ :: ans(20) = [58_${k1}$, 51_${k1}$, 50_${k1}$, 44_${k1}$,       &
+                             58_${k1}$, 51_${k1}$, 50_${k1}$, 55_${k1}$,       &
+                             63_${k1}$, 55_${k1}$, 10_${k1}$, 13_${k1}$,       &
+                             10_${k1}$, 11_${k1}$, 8_${k1}$, 6_${k1}$,         &
+                             10_${k1}$, 9_${k1}$, 6_${k1}$, 9_${k1}$]
+
+        print *, "Test binomial_distribution_rvs_${k1}$"
+        seed = 852693417
+        call random_seed(seed, get)
+        n = 73_${k1}$
+        p = 0.76
+        do i = 1, 5
+          res(i) = binom_rvs(n, p)
+        end do
+        res(6:10) = binom_rvs(n, p, 5)
+        n = 20_${k1}$
+        p = 0.4
+        do i = 11, 15
+            res(i) = binom_rvs(n, P)
+        end do
+       res(16:20) = binom_rvs(n, p, 5)
+        call check(all(res == ans),                                            &
+            msg="binomial_distribution_rvs_${k1}$ failed", warn=warn)
+    end subroutine test_binomial_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_binomial_pmf_${t1[0]}$${k1}$
+        ${t1}$ :: x1, x2(2,3,3),  n
+        integer :: i, m
+        integer :: seed, get
+        real :: p, res(2,3,4)
+        real :: ans(24) = [0.109103374, 0.109103374, 0.109103374, 0.109103374, &
+                           0.109103374, 0.109103374, 0.110863127, 0.110863127, &
+                           2.59381924E-02, 0.109103374, 9.87374857E-02,        &
+                           9.87374857E-02, 9.58787128E-02, 4.15466949E-02,     &
+                           0.110863127, 0.109103374, 0.109103374,              &
+                           6.05889224E-02, 0.110863127, 9.87374857E-02,        &
+                           5.83609417E-02, 6.05889224E-02, 0.114558555,        &
+                           8.07852224E-02]
+
+        print *, "Test binomial_distribution_pmf_${k1}$"
+        seed = 630852741
+        call random_seed(seed, get)
+        n = 50_${k1}$
+        p = 0.6
+        x1 = binom_rvs(n, p)
+        x2 = reshape(binom_rvs(n, p, 18), [2,3,3])
+        res(:,:,1) = binom_pmf(x1, n, p)
+        res(:,:,2:4) = binom_pmf(x2, n, p)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="binomial_distribution_pmf_${k1}$ failed", warn=warn)
+    end subroutine test_binomial_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_binomial_cdf_${t1[0]}$${k1}$
+        ${t1}$ :: x(2,3,4),  n
+        integer :: i, m
+        integer :: seed, get
+        real :: p, res(2,3,4)
+        real :: ans(24) = [0.978971064, 0.993534148, 0.872478724, 0.250010669, &
+                           5.09519465E-02, 0.125598967, 0.943473637,           &
+                           0.872478724, 0.978971064, 0.595598698, 0.250010669, &
+                           0.125598967, 0.872478724, 0.415892929, 0.595598698, &
+                           0.415892929, 0.415892929, 0.595598698, 0.978971064, &
+                           0.595598698, 0.595598698, 0.415892929, 0.755337179, &
+                           0.125598967]
+                           
+        print *, "Test binomial_distribution_cdf_${k1}$"
+        seed = 17428396
+        call random_seed(seed, get)
+        n = 20_${k1}$
+        p = 0.4
+        x = reshape(binom_rvs(n, p, 24), [2,3,4])
+        res(:,:,:) = binom_cdf(x, n, p)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="binomial_distribution_cdf_${k1}$ failed", warn=warn)
+    end subroutine test_binomial_cdf_${t1[0]}$${k1}$
+
+  #:endfor
+
+end program test_distribution_binomial
