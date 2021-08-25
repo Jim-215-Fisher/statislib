@@ -1,0 +1,230 @@
+#:include "common.fypp"
+program test_distribution_hypgeo
+    use stdlib_kinds
+    use stdlib_error, only : check
+    use stdlib_stats_distribution_PRNG, only : random_seed
+    use statislib_hypgeo,            hg_rvs => hypergeometric_distribution_rvs,&
+                                     hg_pmf => hypergeometric_distribution_pmf,&
+                                     hg_cdf => hypergeometric_distribution_cdf
+    use statislib_special, lgf=>log_factorial
+
+    implicit none
+    #:for k1, t1 in REAL_KINDS_TYPES
+    ${t1}$, parameter :: ${k1}$tol = 1000 * epsilon(1.0_${k1}$)
+    #:endfor
+    real(dp) :: ONE = 1.0_dp
+    logical ::  warn = .true.
+    integer :: put, get
+
+
+
+    put = 12345678
+    call random_seed(put, get)
+
+    call test_hypergeometric_random_generator
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_hypergeometric_rvs_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_hypergeometric_pmf_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_hypergeometric_cdf_${t1[0]}$${k1}$
+    #:endfor
+
+
+
+
+
+contains
+
+    subroutine test_hypergeometric_random_generator
+    
+        integer, parameter :: num = 10000000
+        integer, parameter :: array_size = 1000
+        integer :: i, j, freq(0:array_size - 1), k, a, b
+        real(dp) :: chisq, expct
+        real :: p
+
+        print *, ""
+        print *, "Test hypergeometric random generator with chi-squared"
+        
+        freq = 0; k = 20; a = 30; b = 40
+        do i = 1, num
+            j = hg_rvs(k, a, b)
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        do i = max(0, k - b), min(k, a, array_size - 1)
+           expct = num * exp(lgf(a, ONE) + lgf(b, ONE) + lgf(k, ONE) +         &
+                   lgf(a + b - k, ONE) - lgf(i, ONE) - lgf(a - i, ONE) -       &
+                   lgf(k - i, ONE) - lgf(b - k + i, ONE) - lgf(a + b, ONE))
+           if(expct < 1.0e-7) cycle
+           chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                   //" 1143.92"
+        write(*,*) "Chi-squared for hypergeometric random generator is : ",    &
+                  chisq
+        call check((chisq < 1143.9),                                           &
+               msg="hypergeometric randomness failed chi-squared test",        &
+                    warn=warn)
+
+        freq = 0; k = 600; a = 700; b = 400
+        do i = 1, num
+            j = hg_rvs(k, a, b)
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        do i = max(0, k - b), min(k, a, array_size  - 1)
+           expct = num * exp(lgf(a, ONE) + lgf(b, ONE) + lgf(k, ONE) +         &
+                   lgf(a + b - k, ONE) - lgf(i, ONE) - lgf(a - i, ONE) -       &
+                   lgf(k - i, ONE) - lgf(b - k + i, ONE) - lgf(a + b, ONE))
+           if(expct < 1.0e-7) cycle
+           chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                   //" 1143.92"
+        write(*,*) "Chi-squared for hypergeometric random generator is : ",    &
+                  chisq
+        call check((chisq < 1143.9),                                           &
+               msg="hypergeometric randomness failed chi-squared test",        &
+                    warn=warn)
+    end subroutine test_hypergeometric_random_generator
+
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_hypergeometric_rvs_${t1[0]}$${k1}$
+    
+        ${t1}$ :: res(15), k, a, b
+        integer :: seed, get
+        #:if k1 == "int8"
+        ${t1}$, parameter :: ans(15) =                                         &
+                           [9_${k1}$, 12_${k1}$, 19_${k1}$, 27_${k1}$,         &
+                            0_${k1}$, 0_${k1}$, 0_${k1}$, 0_${k1}$, 0_${k1}$,  &
+                            0_${k1}$ ,0_${k1}$, 0_${k1}$, 0_${k1}$, 0_${k1}$,  &
+                            0_${k1}$]
+        #:else
+        ${t1}$, parameter :: ans(15) =                                         &
+                           [9_${k1}$, 12_${k1}$, 19_${k1}$, 27_${k1}$,         &
+                            478_${k1}$, 537_${k1}$, 661_${k1}$, 977_${k1}$,    &
+                            933_${k1}$, 927_${k1}$, 907_${k1}$, 936_${k1}$,    &
+                            915_${k1}$, 924_${k1}$, 916_${k1}$]
+        #:endif
+        
+        print *, "Test hypergeometric_distribution_rvs_${t1[0]}$${k1}$"
+        seed = 852693417
+        call random_seed(seed, get)
+        res = 0
+        k = 25_${k1}$; a = 35_${k1}$; b = 45_${k1}$
+        res(1) = hg_rvs(k, a, b)
+        res(2) = hg_rvs(k, b, a)
+        res(3) = hg_rvs(b, k, a)
+        res(4) = hg_rvs(b, a, k)
+        #:if k1 != "int8"
+        k = 1000_${k1}$; a = 1500_${k1}$; b = 1600_${k1}$
+        res(5) = hg_rvs(k, a, b)
+        res(6) = hg_rvs(k, b, a)
+        res(7) = hg_rvs(b, k, a)
+        res(8) = hg_rvs(b, a, k)
+        res(9:15) = hg_rvs(a, b, k, 7)
+        #:endif
+        call check(all(res == ans),                                            &
+            msg="hypergeometric_distribution_rvs failed", warn=warn)
+    end subroutine test_hypergeometric_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_hypergeometric_pmf_${t1[0]}$${k1}$
+    
+        ${t1}$ :: x1, x2(2,3,3), k, a, b
+        integer :: seed, get
+        real :: res(2,3,4)
+        real, parameter :: ans(24) =                                           &
+                         [0.125978559, 0.125978559, 0.125978559, 0.125978559,  &
+                          0.125978559, 0.125978559, 0.163081601,               &
+                          6.23855391E-04, 0.130746454, 0.169451982,            &
+                          2.19966788E-02, 0.106020756, 0.130746454,            &
+                          0.106020756, 0.169451982, 4.81831990E-02,            &
+                          8.71643052E-02, 8.71643052E-02, 0.106020756,         &
+                          0.163081601, 0.146797970, 8.71643052E-02,            &
+                          6.37718812E-02, 0.163081601]
+
+        print *, "Test hypergeometric_distribution_pmf_${t1[0]}$${k1}$"
+        seed = 630852741
+        call random_seed(seed, get)
+        k = 34_${k1}$; a = 43_${k1}$; b = 50_${k1}$
+        x1 = hg_rvs(b, k, a)
+        x2 = reshape(hg_rvs(k, a, b, 18), [2,3,3])
+        res(:,:,1) = hg_pmf(x1, b, k, a)
+        res(:,:,2:4) = hg_pmf(x2, k, a, b)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="hypergeometric_distribution_pmf_${t1[0]}$${k1}$ failed",      &
+            warn=warn)
+    end subroutine test_hypergeometric_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_hypergeometric_cdf_${t1[0]}$${k1}$
+    
+        ${t1}$ :: x(2,3,4), k, a, b
+        integer :: seed, get
+        real :: res(2,3,4)
+        real, parameter :: ans(24) =                                           &
+                         [0.966994286, 0.998145521, 0.786631644,               &
+                          0.223089993, 3.50257270E-02, 9.95049030E-02,         &
+                          0.905739069, 0.905739069, 0.966994286,               &
+                          0.608825386, 0.404348165, 0.223089993,               &
+                          0.905739069, 0.404348165, 0.608825386,               &
+                          0.404348165, 0.404348165, 0.608825386,               &
+                          0.966994286, 0.608825386, 0.608825386,               &
+                          0.404348165, 0.786631644, 9.95049030E-02]
+        #:if k1 != "int8"
+        real, parameter :: ans2(24) =                                          &
+                          [0.987680614, 0.800897896, 0.487716764,              &
+                           3.88451130E-03, 0.800897896, 0.487716764,           &
+                           0.625306785, 0.689547598, 0.914714575,              &
+                           0.557379782, 9.98977412E-05, 3.72532159E-02,        &
+                           0.883988857, 0.625306785, 0.139639661,              &
+                           0.914714575, 0.418423533, 0.418423533,              &
+                           0.748473823, 0.689547598, 0.914714575,              &
+                           0.289020717, 0.557379782, 0.689547598]
+        #:endif
+        
+        print *, "Test hypergeometric_distribution_cdf_${t1[0]}$${k1}$"
+        seed = 17428396
+        call random_seed(seed, get)
+        k = 23_${k1}$; a = 34_${k1}$; b = 42_${k1}$
+        res = 0.0
+        x = reshape(hg_rvs(a, k, b, 24), [2,3,4])
+        res(:,:,:) = hg_cdf(x, a, k, b)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="hypergeometric_distribution_cdf_${t1[0]}$${k1}$ failed",      &
+            warn=warn)
+            
+        #:if k1 != "int8"
+        k = 256_${k1}$; a = 302_${k1}$; b = 276_${k1}$
+        x = reshape(hg_rvs(a, k, b, 24), [2,3,4])
+        res(:,:,:) = hg_cdf(x, a, k, b)
+        call check(all(abs(res - reshape(ans2, [2,3,4])) < sptol),             &
+            msg="hypergeometric_distribution_cdf_${t1[0]}$${k1}$ failed",      &
+            warn=warn)
+        #:endif
+    end subroutine test_hypergeometric_cdf_${t1[0]}$${k1}$
+
+  #:endfor
+end program test_distribution_hypgeo

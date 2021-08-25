@@ -1,0 +1,318 @@
+#:include "common.fypp"
+module statislib_poisson
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use statislib_uniform, only : uni=>uniform_distribution_rvs
+    use statislib_special, lgf=>log_factorial
+
+    implicit none
+    private
+
+    public :: poisson_distribution_rvs
+    public :: poisson_distribution_pmf
+    public :: poisson_distribution_cdf
+
+
+
+    interface poisson_distribution_rvs
+    !! Version 0.1
+    !!
+    !! Poisson Distribution Random Variates
+    !! ([Document](../doc/statislib_poisson.md))
+    !!
+        module procedure pois_dist_rvs                  ! 1 dummy
+
+        module procedure pois_dist_rvs_array            ! 2 dummies
+
+    end interface poisson_distribution_rvs
+
+
+
+    interface poisson_distribution_pmf
+    !! Version 0.1
+    !!
+    !! Poisson Distribution Probability Density Function
+    !! ([Document](../doc/statislib_poisson.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure pois_dist_pmf_${t1[0]}$${k1}$
+        #:endfor
+
+    end interface poisson_distribution_pmf
+
+
+
+    interface poisson_distribution_cdf
+    !! Version 0.1
+    !!
+    !! Poisson Distribution Cumulative Distribution Function
+    !! ([Document](../doc/statislib_poisson.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure pois_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+
+    end interface poisson_distribution_cdf
+
+
+
+
+
+contains
+
+    impure elemental function pois_dist_rvs(lamda) result(res)
+    !
+    ! For lamda < 3.0, algorithm is based on PINV, an inversion sequential search
+    !
+    ! For lamda < 100.0, algorithm is based on C.D.Kemp's KEMPOIS, "Poisson
+    ! Random Variate Generation", Appl. Statist., 40(1), 1991, p.143
+    !
+    ! For lamda >=100.0, algorithm is based on Kachitvichyanukul's PTPE, "Poisson
+    ! Random Variate Generation", Reaseach Memorandum 81-4, Purdue University,
+    ! 1981
+    !
+    ! Fortran 90 program by Jim-215-Fisher
+    !
+        real, intent(in) :: lamda
+        integer :: res, n
+        integer, save :: m, mmin, mrang
+        real, save :: L = 0.0, L2 = 0.0, p0
+        real, save :: rm, a, g, a2, h1, pm, pl, fm, fl
+        real, save :: p1, p2, p3, p4, xm, xl, xr, c4,  lamdal, lamdar
+        real, allocatable, save :: pb(:), pc(:,:)
+        logical, allocatable, save :: pbl(:), pcl(:,:)
+        integer :: i, k, y, im
+        real :: p, s, u, v, x, fy, q, rho, t, a0, cc
+        real, allocatable :: tmp1(:), tmp2(:,:)
+        logical, allocatable :: tmp1l(:), tmp2l(:,:)
+        real, parameter :: d = 1. / 2., d1 = 23. / 270., d2 = 5. / 56.
+        real, parameter :: d3 = 30557. / 649152., d4 = 34533608. / 317640015.
+        real, parameter :: c = 0.39894228, c1 = 1. / 12., c2 = 1. / 24.
+        real, parameter :: c3 = 293. / 8640.
+        real, parameter :: e = 2. / 3., e1 = 1. / 4., e2 = 1. / 18.
+        real, parameter :: f1 = 1. / 6., f2 = 3. / 20., f3 = 1. / 20.
+        real, parameter :: h = 7. / 6.
+
+        if(lamda <= 0.) call error_stop("Error(pois_dist_rvs): Poisson"        &
+            //" distribution parameter lamda must be positive")
+        if(L /= lamda) then              ! Initialization
+            L = lamda
+            if(L < 3.0) then
+                p0 = exp(-L)
+            elseif(L < 100.0) then
+                m = L + d; mmin = m - 1; rm = 1. / m; a = L - m; a2 = a * a
+                g = c / sqrt(real(m)); h1 = d + g * h
+                pm = g * (1.0 - c1 / (m + c2 + c3 * rm))
+                pl = pm * (1.0 - d * a2 / (m + a * (e + a * (e1 - e2 * rm))))
+            else
+                m = L; mrang = 6 * sqrt(L)
+                allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
+                allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),          &
+                    source = .false.)
+                pb(0) = 1.0; pbl(0) = .true.
+                pc(2,0) = 0.0; pcl(2,0) = .true.
+                p1 = int(2.195 * sqrt(real(m)) - 2.2) + d
+                xm = m + d; xl = xm - p1; xr = xm + p1
+                c4 = 0.133 + 8.56 / (6.83 + L)
+                a0 = (L - xl) / L
+                lamdal = a0 * (1.0 + a0 / 2.0)
+                a0 = (xr - L) / xr
+                lamdar = a0 * (1.0 + a0 / 2.0)
+                p2 = p1 * (1.0 + 2.0 * c4)
+                p3 = p2 + (0.109 + 8.25 / (10.86 + L)) / lamdal
+                p4 = p3 + c4 / lamdar
+            end if
+        end if
+
+        if(L < 3.0) then                     !PINV
+            k = 0; p = p0; s = p
+            u = uni( )
+            do
+                if(u <= s) exit
+                k = k + 1
+                p = p * L / k
+                s = s + p
+            enddo
+            n = k
+        elseif(L < 100.0) then               !KEMPOIS
+            LP1:do
+                u = uni( )
+                LP2: if(u > d) then
+                    if(u < h1) then                 !squeeze
+                        if(L2 /= lamda) then
+                            L2 = lamda
+                            fm = d + g * (e - d1 / (m + d2 + d3 / (m + d4)))
+                            fl = fm - a * pm * (1.0 - f1 * a2 / (m + a * (d     &
+                                 + a * (f2 - f3 * rm))))
+                        end if
+                        if(u <= fl) exit LP2
+                    end if
+                    u = 1.0 - u                     !search right of mode
+                    s = pl
+                    do i = m + 1, m + m + 30
+                        s = s * L / i
+                        if(u < s) then
+                            k = i
+                            exit LP1
+                        end if
+                        u = u - s
+                    end do
+                    cycle
+                end if LP2
+                if(u < pl) then                     !search left of mode
+                    k = m
+                    exit LP1
+                end if
+                s = pl
+                do i = 0, mmin - 1
+                    u = u - s
+                    s = (m - i) * s /L
+                    if(u < s) then
+                        k = mmin - i
+                        exit LP1
+                    end if
+                end do
+                k = 0
+                exit LP1
+            end do LP1
+            n = k
+        else                                 !PTPE
+            do
+                u = p4 * uni( ); v = uni( )
+                if(u <= p1) then                   !Triangular region
+                    k = xm - p1 * v + u
+                    exit
+                elseif(u <= p2) then               !Parallelogram
+                    x = xl + (u - p1) / c4
+                    v = v * c4 + 1 - abs(m - x + d) / p1
+                    if(v > 1.) cycle
+                    k = x
+                elseif(u <= p3) then               !Left tail
+                    k = xl + log(v) / lamdal
+                    if(k < 0) cycle
+                    v = v * (u - p2) * lamdal
+                else                               !Right tail
+                    k = xr - log(v) / lamdar
+                    v = v * (u - p3) * lamdar
+                end if
+                y = abs(k - m)
+                if(.not. (m >= 100 .and. k > 50)) then  !Acceptance/Rejection
+                    if(y > mrang) then             !expand storage size
+                        do
+                            mrang = mrang + 4
+                            if(y < mrang) exit
+                        end do
+                        allocate(tmp1(-mrang : mrang), source = 0.0)
+                        allocate(tmp1l(-mrang : mrang), source = .false.)
+                        im = (size(pb) - 1) / 2
+                        tmp1(-im : im) = pb; tmp1l(-im : im) = pbl
+                        call move_alloc(tmp1, pb)
+                        call move_alloc(tmp1l, pbl)
+                    end if
+                    if(.not. pbl(k - m)) then      !calculate probability
+                        fy = 1.0
+                        if(k > m) then             !search right of mode
+                            do i = m + 1, k
+                                fy = fy * L / i
+                            end do
+                        else                       !search left of mode
+                            do i = m - 1, k, -1
+                                fy = fy * (i + 1) / L
+                            end do
+                        end if
+                        pb(k - m) = fy; pbl(k - m) = .true.
+                    end if
+                    if(v <= pb(k - m)) exit
+                else                               !Squeeze
+                    a0 = log(v)
+                    x = real(k)
+                    if(y > mrang) then             !expand storage size
+                        do
+                            mrang = mrang + 4
+                            if(y < mrang) exit
+                        end do
+                        allocate(tmp2(3, -mrang : mrang), source = 0.0)
+                        allocate(tmp2l(3, -mrang : mrang), source = .false.)
+                        im = (size(pc, 2) - 1) / 2
+                        tmp2(:, -im : im) = pc(:, :)
+                        tmp2l(:, -im : im) = pcl(:, :)
+                        call move_alloc(tmp2, pc)
+                        call move_alloc(tmp2l, pcl)
+                    end if
+                    if(.not. (pcl(3, k - m) .and. pcl(1, k - m))) then
+                        q = (L - x) / x
+                        rho = x - L + (x + d) * q * (1. + q * (-d + q / 3)) +   &
+                              0.00084
+                        pc(3, k - m) = rho; pcl(3, k - m) = .true.
+                    end if
+                    if(a0 > pc(3, k - m)) cycle
+                    if(.not. pcl(1, k - m)) then
+                        t = 0.25 * (x + d) * q ** 4
+                        if(q < 0.) t = t / (1. + q)
+                        pc(1, k - m) = rho - t - 0.004; pcl(1, k - m) = .true.
+                    end if
+                    if(a0 < pc(1, k - m)) exit
+                    if(.not. pcl(2, k - m)) then
+                        cc = (m + d) * log(m / L) +  (x + d) * log(L / x)
+                        cc = cc - m + x + (1. / m - 1. / x) * c1
+                        cc = cc + (1. / (x * x * x) - 1. / (m * m * m)) / 360.
+                        pc(2, k - m) = cc; pcl(2, k - m) = .true.
+                    end if
+                    if(a0 <= pc(2, k - m)) exit
+                end if
+            end do
+            n = k
+        endif
+        res = n
+    end function pois_dist_rvs
+
+
+
+
+    function pois_dist_rvs_array(lamda, array_size) result(res)
+
+        real, intent(in) :: lamda
+        integer, intent(in) :: array_size
+        integer :: res(array_size), i
+
+        do i = 1, array_size
+           res(i) = pois_dist_rvs(lamda)
+        end do
+    end function pois_dist_rvs_array
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function pois_dist_pmf_${t1[0]}$${k1}$(k, lamda) result(res)
+    !
+    ! Poisson Probability Mass Function
+    !
+        real, intent(in) :: lamda
+        real :: res
+        ${t1}$, intent(in) :: k
+
+        res = exp(k * log(lamda) - lamda - lgf(k))
+    end function pois_dist_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function pois_dist_cdf_${t1[0]}$${k1}$(k, lamda) result(res)
+    !
+    ! Poisson Cumulative Distribution Function
+    !
+        real, intent(in) :: lamda
+        ${t1}$, intent(in) :: k
+        real :: res
+
+        res = regamma_q(k+1, lamda)
+
+    end function pois_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+end module statislib_poisson

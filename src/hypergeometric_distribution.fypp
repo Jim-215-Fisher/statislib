@@ -1,5 +1,5 @@
 #:include "common.fypp"
-module statislib_distribution_hypgeo
+module statislib_hypgeo
     use stdlib_kinds
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni=>uniform_distribution_rvs
