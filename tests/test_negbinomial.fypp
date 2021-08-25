@@ -1,0 +1,164 @@
+#:include "common.fypp"
+program test_distribution_negbinomial
+    use stdlib_kinds
+    use stdlib_error, only : check
+    use stdlib_stats_distribution_PRNG, only : random_seed
+    use statislib_negbinomial,          nb_rvs => negbinomial_distribution_rvs, &
+                                        nb_pmf => negbinomial_distribution_pmf, &
+                                        nb_cdf => negbinomial_distribution_cdf
+    use statislib_special, only : lgf => log_factorial
+
+    implicit none
+    #:for k1, t1 in REAL_KINDS_TYPES
+    ${t1}$, parameter :: ${k1}$tol = 1000 * epsilon(1.0_${k1}$)
+    #:endfor
+    logical ::  warn = .true.
+    integer :: put, get
+
+
+
+    put = 1234567
+    call random_seed(put, get)
+
+    call test_negbinomial_random_generator
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_negbinomial_rvs_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_negbinomial_pmf_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_negbinomial_cdf_${t1[0]}$${k1}$
+    #:endfor
+
+
+
+
+contains
+
+    subroutine test_negbinomial_random_generator
+        integer, parameter :: num = 10000000
+        integer, parameter :: array_size = 1000
+        integer :: i, j, freq(0:array_size - 1), r
+        real(dp) :: chisq, expct
+        real :: p
+
+        print *, ""
+        print *, "Test negative binomial random generator with chi-squared"
+        freq = 0; r = 3; p = 0.45
+        do i = 1, num
+            j = nb_rvs(r, p)
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        do i = 0, array_size - 1
+            expct = num * exp(r * log(p) + i * log(1. - p) + lgf(i+r-1) -lgf(i)&
+                lgf(r-1))
+            if(expct < 1.0e-7) cycle
+            chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                   //" 1143.92"
+        write(*,*) "Chi-squared for negative binomial random generator is : ", &
+                  chisq
+        call check((chisq < 1143.9),                                           &
+               msg="negative binomial randomness failed chi-squared test",     &
+                    warn=warn)
+    end subroutine test_negbinomial_random_generator
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_negbinomial_rvs_${t1[0]}$${k1}$
+    
+        ${t1}$ :: r, res(10)
+        real :: p
+        integer :: seed, get, i
+        integer, parameter :: ans(10) =                                        &
+                            [13_${k1}$, 2_${k1}$, 11_${k1}$, 1_${k1}$,         &
+                             14_${k1}$, 14_${k1}$, 2_${k1}$, 11_${k1}$,        &
+                             24_${k1}$, 21_${k1}$]
+
+        print *, "Test negbinomial_distribution_rvs_${t1[0]}$${k1}$"
+        seed = 852693417
+        call random_seed(seed, get)
+        r = 5_${k1}$; p = 0.27
+        do i = 1, 5
+          res(i) = nb_rvs(r, p)
+        end do
+        res(6:10) = nb_rvs(r, p, 5)
+        call check(all(res == ans),                                            &
+            msg="negbinomial_distribution_rvs failed", warn=warn)
+    end subroutine test_negbinomial_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_negbinomial_pmf_${t1[0]}$${k1}$
+    
+        ${t1}$ :: x1, x2(2,3,3), r
+        integer :: seed, get
+        real :: p, res(2,3,4)
+        real, parameter :: ans(24) =                                           &
+                         [7.43824930E-04, 7.43824930E-04, 7.43824930E-04,      &
+                          7.43824930E-04, 7.43824930E-04, 7.43824930E-04,      &
+                          3.36538367E-02, 1.74467303E-02, 4.72042076E-02,      &
+                          4.37886864E-02, 3.40869576E-02, 4.37886864E-02,      &
+                          4.95643616E-02, 1.02844154E-02, 4.95643616E-02,      &
+                          4.76194620E-02, 3.06249876E-02, 3.36538367E-02,      &
+                          4.72042076E-02, 3.06249876E-02, 3.67132016E-02,      &
+                          5.07261492E-02, 3.67132016E-02, 5.08860424E-02]
+
+        print *, "Test negbinomial_distribution_pmf_${t1[0]}$${k1}$"
+        seed = 630852741
+        call random_seed(seed, get)
+        r = 5_${k1}$; p = 0.23
+        x1 = nb_rvs(r, p)
+        x2 = reshape(nb_rvs(r, p, 18), [2,3,3])
+        res(:,:,1) = nb_pmf(x1, r, p)
+        res(:,:,2:4) = nb_pmf(x2, r, p)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="negbinomial_distribution_pmf_${t1[0]}$${k1}$ failed", warn=warn)
+    end subroutine test_negbinomial_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_negbinomial_cdf_${t1[0]}$${k1}$
+    
+        ${t1}$ :: x(2,3,4), r
+        integer :: seed, get
+        real :: p, res(2,3,4)
+        real, parameter :: ans(24) =                                           &
+                         [4.36418653E-02, 0.341519654, 9.68778729E-02,         &
+                          4.36418653E-02, 1.18591785E-02, 9.68778729E-02,      &
+                          1.18591785E-02, 1.18591785E-02, 9.68778729E-02,      &
+                          4.36418653E-02, 9.68778729E-02, 4.36418653E-02,      &
+                          4.36418653E-02, 4.36418653E-02, 0.341519654,         &
+                          1.18591785E-02, 0.168214142, 0.168214142,            &
+                          4.36418653E-02, 4.36418653E-02, 9.68778729E-02,      &
+                          0.168214142, 4.36418653E-02, 0.168214142]
+
+        print *, "Test negbinomial_distribution_cdf_${t1[0]}$${k1}$"
+        seed = 17428396
+        call random_seed(seed, get)
+        r = 4; p = 0.67
+        x = reshape(nb_rvs(r, p, 24), [2,3,4])
+        res(:,:,:) = nb_cdf(x, r, p)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="negbinomial_distribution_cdf_${t1[0]}$${k1}$ failed", warn=warn)
+    end subroutine test_negbinomial_cdf_${t1[0]}$${k1}$
+
+  #:endfor
+
+end program test_distribution_negbinomial

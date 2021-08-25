@@ -1,8 +1,8 @@
 ---
-title: stats_distribution
+title: statslib
 ---
 
-# Statistical Distribution -- Binomial Distribution Module
+# Statistical Distribution -- Binomial Distribution
 
 [TOC]
 
@@ -25,7 +25,7 @@ For a single trial, binomial distribution is Bernoulli distribution.
 
 ### Class
 
-Function
+Elemental function
 
 ### Arguments
 
