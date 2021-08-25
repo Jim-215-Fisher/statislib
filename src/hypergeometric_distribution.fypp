@@ -1,0 +1,395 @@
+#:include "common.fypp"
+module statislib_distribution_hypgeo
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use statislib_uniform, only : uni=>uniform_distribution_rvs
+    use statislib_special, lgf=>log_factorial
+
+    implicit none
+    private
+    real(dp), parameter  :: ONE = 1.0_dp, dptol = 10 * epsilon(ONE)
+    real, parameter :: sptol = 10 * epsilon(1.0)
+
+    public :: hypergeometric_distribution_rvs
+    public :: hypergeometric_distribution_pmf
+    public :: hypergeometric_distribution_cdf
+
+
+
+    interfac hypergeometric_distribution_rvs
+    !! Version 0.1
+    !!
+    !! Hypergeometric Distribution Random Variates
+    !! ([Document](../doc/statislib_hypgeo.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure hypgeo_dist_rvs_${t1[0]}$${k1}$       ! 3 dummy
+        #:endfor
+
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure hypgeo_dist_rvs_array_${t1[0]}$${k1}$ ! 4 dummy
+        #:endfor
+    end interface hypergeometric_distribution_rvs
+
+
+
+    interface hypergeometric_distribution_pmf
+    !! Version 0.1
+    !!
+    !! Hypergeometric Distribution Probability Density Function
+    !! ([Document](../doc/statislib_hypgeo.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure hypgeo_dist_pmf_${t1[0]}$${k1}$
+        #:endfor
+    end interface hypergeometric_distribution_pmf
+
+
+
+    interface hypergeometric_distribution_cdf
+    !! Version 0.1
+    !!
+    !! Hypergeometric Distribution Cumulative Distribution Function
+    !! ([Document](../doc/statislib_hypgeo.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure hypgeo_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface hypergeometric_distribution_cdf
+
+
+
+
+contains
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function hypgeo_dist_rvs_${t1[0]}$${k1}$(k0, a0, b0)      &
+        result(res)
+    !
+    ! For p(k) < dptol at k = kmin algorithm is based on HIN inversion
+    ! sequential search.
+    !
+    ! For p(k) > dptol, algorithm is based on H2PE by V. Kachitvichyanukul and
+    ! B. Schmeiser,  "Computer Generation of Hypergeometric Random Variates",
+    ! J. Statist. Comput. Simul 22, 1985, p127
+    !
+    ! Fortran 90 program by Jim-215-Fisher
+    !
+        ${t1}$, intent(in) :: k0, a0, b0
+        ${t1}$ :: res
+        ${t1}$, save :: k, a, b, n1, n2, kn, n, ixl, ixr
+        integer, save :: m, kmin, kmax, mrang
+        real, save :: AA, D, xl, xr, kl, kr, lamdal, lamdar, p1, p2, p3
+        real, allocatable, save :: p(:), pb(:,:)
+        logical, allocatable, save :: plog(:), pblog(:,:)
+        real(dp), save :: p0
+        integer :: y, y1, ym, yn, yk, nk, x, xm, xk, xn, nm, i, kk, im
+        real, allocatable :: tmp1(:), tmp2(:,:)
+        logical, allocatable :: tmp1l(:), tmp2l(:,:)
+        real(dp) :: uu, pp
+        real :: u, v, R, S, T, E, G, DG, GU, GL, Ub, Av, Dr, Ds, Dt, De, f
+
+
+        if(a0 < 0 .or. b0 < 0 .or. k0 < 0 ) call error_stop("Error(hypgeo_dist"&
+           //"_rvs): Hypergeometric distribution parameters must be positive"  &
+           //" integer")
+        if(k0 > a0 + b0) call error_stop("Error(hypgeo_dist_rvs): Sampling "   &
+           //" size k0 must not be greater than population size a0 + b0")
+
+        if(k /= k0 .or. a /= a0 .or. b /= b0) then    !any parameter changed?
+            k = k0; a = a0; b = b0
+            n1 = a; n2 = b; n = n1 + n2
+            if(a > b) then
+                n1 = b; n2 = a
+            end if
+            kn = k
+            if(k > n / 2) kn = n - k
+            kmin = int(max(0_${k1}$, kn - n2), int32)
+            kmax = int(min(kn, n1), int32)
+            p0 = exp(lgf(n1, ONE) + lgf(n2, ONE) + lgf(kn, ONE) +              &
+                     lgf(n - kn, ONE) - lgf(n1 - kmin, ONE) -                  &
+                     lgf(kmin, ONE) - lgf(kn - kmin, ONE) -                    &
+                     lgf(n2 - kn + kmin, ONE) - lgf(n, ONE))
+            if(p0 < dptol) then                   !for H2PE algorithm constants
+                m = (kn + 1) * (n1 + 1) / real(n + 2)
+                u = log(real(n - kn)) + log(real(kn)) + log(real(n1)) +        &
+                    log(real(n2)) - log(real(n-1)) - 2 * log(real(n))
+                mrang = 6 * sqrt(exp(u))
+                if(allocated(p)) deallocate(p, pb, plog, pblog)
+                allocate(p(-mrang : mrang), pb(3, -mrang : mrang), source = 0.0)
+                allocate(plog(-mrang : mrang), pblog(3, -mrang : mrang),       &
+                         source = .false.)
+                p(0) = 1.0; plog(0) = .true.
+                pb(2, 0) = 0.0; pblog(2, 0) = .true.
+                AA = lgf(m) + lgf(n1 - m) + lgf(kn - m) + lgf(n2 - kn + m)
+                D = exp(log(1.5) + 0.5 * u) + 0.5
+                xl = m - D + 0.5; xr = m + D + 0.5
+                ixl = ceiling(xl); ixr = floor(xr)
+                kl = exp(AA - lgf(ixl) - lgf(n1 - ixl) - lgf(kn - ixl) -       &
+                     lgf(n2 - kn + ixl))
+                kr = exp(AA - lgf(ixr - 1) - lgf(n1 - ixr + 1) -               &
+                     lgf(kn - ixr + 1) - lgf(n2 - kn + ixr - 1))
+                lamdal = -log(xl * (n2 - kn + xl) / real((n1 - xl + 1) *       &
+                         (kn - xl + 1)))
+                lamdar = -log((n1 - xr + 1) * (kn - xr + 1) / real(xr *        &
+                         (n2 - kn + xr)))
+                p1 = 2.0 * D
+                p2 = p1 + kl / lamdal
+                p3 = p2 + kr / lamdar
+            endif
+        end if
+
+        if(p0 >= dptol) then    !use HIN algorithm
+            uu = uni(ONE)       !need double precision uniform random variates
+            y = kmin; pp = p0   !start at kmin with p(kmin)
+            do
+                if(uu <= pp) exit
+                uu = uu - pp
+                pp = pp * (n1 - y) * (kn - y) / real((y + 1) * (n2 - kn + y +   &
+                     1), dp)
+                y = y + 1
+                if(pp < dptol) then
+                               !if residual probability is too small, restart
+                    uu = uni(ONE); y = kmin; pp = p0
+                endif
+            end do
+        else                   !use H2PE algorithm
+            do
+                u = p3 * uni( ); v = uni( )
+                if(u <= p1) then        !central retangular region
+                    y = xl + u
+                elseif(u <= p2) then    !left exponential tail
+                    y = xl + log(v) / lamdal
+                    if(y < kmin) cycle
+                    v = v * (u - p1) * lamdal
+                else                    !right exponential tail
+                    y = xr - log(v) / lamdar
+                    if(y > kmax) cycle
+                    v = v * (u - p2) * lamdar
+                end if
+                kk = abs(y - m)
+                if(m >= 100 .and. y > 50) then      !use approximation
+                    Av = log(v)
+                    if(kk > mrang) then             !expand storage size
+                        do
+                            mrang = mrang + 4
+                            if(kk < mrang) exit
+                        end do
+                        allocate(tmp2(3, -mrang : mrang), source = 0.0)
+                        allocate(tmp2l(3, -mrang : mrang), source = .false.)
+                        im = (size(pb,2) - 1) / 2
+                        tmp2(:, -im : im) = pb(:, :)
+                        tmp2l(:, -im : im) = pblog(:, :)
+                        call move_alloc(tmp2, pb)
+                        call move_alloc(tmp2l, pblog)
+                    end if
+                    if(.not. (pblog(3, y - m) .and. pblog(1, y - m))) then
+                          !when the squeeze and rejection values not set yet
+                        x = y; y1 = y + 1; ym = y - m
+                        yn = n1 - y + 1; yk = kn - y + 1; nk = n2 - kn + y1
+                        R = - ym / real(y1); S = ym / real(yn)
+                        T = ym / real(yk); E = - ym / real(nk);
+                        G = yn * yk / real(y1 * nk) - 1.; DG = 1.0
+                        if(G < 0.0) DG = 1.0 + G
+                        GU = G * (1.0 + G * (-0.5 + G / 3.0))
+                        GL = GU - 0.25 * G ** 4 / DG
+                        xm = m + 0.5; xn = n1 - m + 0.5; xk = kn - m + 0.5
+                        nm = n2 - kn + xm
+                        Ub = xm * R * (1.0 + R * (-0.5 + R / 3.0)) +           &
+                             xn * S * (1.0 + S * (-0.5 + S / 3.0)) +           &
+                             xk * T * (1.0 + T * (-0.5 + T / 3.0)) +           &
+                             nm * E * (1.0 + E * (-0.5 + E / 3.0)) +           &
+                             y * GU - m * GL + 0.0034
+                        pb(3, y - m) = Ub; pblog(3, y - m) = .true.
+                    end if
+                    if(Av > pb(3, y- m)) cycle        !rejection
+                    if(.not. pblog(1, y - m)) then
+                        Dr = xm * R * R * R * R
+                        if(R < 0.0) Dr = Dr / (1.0 + R)
+                        Ds = xn * S * S * S * S
+                        if(S < 0.0) Ds = Ds / (1.0 + S)
+                        Dt = xk * T * T * T * T
+                        if(T < 0.0) Dt = Dt / (1.0 + T)
+                        De = nm * E * E * E * E
+                        if(E < 0.0) De = De / (1.0 + E)
+                        pb(1, y - m) = Ub - 0.25 * (Dr + Ds + Dt + De) +       &
+                                     (y + m) * (GL - GU) - 0.0078
+                        pblog(1, y - m) = .true.
+                    end if
+                    if(Av < pb(1, y - m)) exit        !squeeze
+                    if(.not. pblog(2, y - m)) then
+                        pb(2, y - m) = AA - lgf(y) - lgf(n1 - y) -             &
+                                     lgf(kn - y) - lgf(n2 - kn + y)
+                        pblog(2, y - m) = .true.
+                    end if
+                    if(Av <= pb(2, y - m)) exit       !compare to pmf
+                else
+                    if(kk > mrang) then               !expand storage size
+                        do
+                            mrang = mrang + 4
+                            if(kk < mrang) exit
+                        end do
+                        allocate(tmp1(-mrang : mrang), source = 0.0)
+                        allocate(tmp1l(-mrang : mrang), source = .false.)
+                        im = (size(p) - 1) / 2
+                        tmp1(-im : im) = p; tmp1l(-im : im) = plog
+                        call move_alloc(tmp1, p)
+                        call move_alloc(tmp1l, plog)
+                    end if
+                    if(.not. plog(y - m)) then
+                        f = 1.0
+                        if(y > m) then
+                            do i = m + 1, y
+                                f = f * (n1 - i + 1) * (kn - i + 1) /          &
+                                    real(i * (n2 - kn + i))
+                            end do
+                        else
+                            do i = m - 1, y, -1
+                                f = f * (i + 1) * (n2 - kn + i + 1) /          &
+                                    real((n1 - i) * (kn - i))
+                            end do
+                        end if
+                        p(y - m) = f; plog(y - m) = .true.
+                    end if
+                    if(v <= p(y - m)) exit
+                end if
+            end do
+        end if
+        if(k < n / 2 .and. a <= b) then
+            res = y
+        elseif(k < n / 2) then
+            res = k - y
+        elseif(a <= b) then
+            res = a - y
+        else
+            res = k - b + y
+        end if
+    end function hypgeo_dist_rvs_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    function hypgeo_dist_rvs_array_${t1[0]}$${k1}$(k0, a0, b0, array_size)     &
+        result(res)
+        
+        ${t1}$, intent(in) :: k0, a0, b0
+        integer, intent(in) :: array_size
+        ${t1}$ :: res(array_size)
+        integer :: i
+
+        if(a0 < 0 .or. b0 < 0 .or. k0 < 0 ) call error_stop("Error(hypgeo_dist"&
+           //"_rvs): Hypergeometric distribution parameters must be positive"  &
+           //" integer")
+        if(k0 > a0 + b0) call error_stop("Error(hypgeo_dist_rvs): Sampling "   &
+           //" size k0 must not be greater than population size a0 + b0")
+        do i = 1, array_size
+            res(i) = hypgeo_dist_rvs_${t1[0]}$${k1}$(k0, a0, b0)
+        end do
+    end function hypgeo_dist_rvs_array_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function hypgeo_dist_pmf_${t1[0]}$${k1}$(x, k0, a0, b0)   &
+        result(res)
+    !
+    ! Hypergeometric Probability Mass Function
+    !
+        ${t1}$, intent(in) :: x, k0, a0, b0
+        real :: res
+        ${t1}$ :: k, n1, n2, n
+
+        character(len = 100) :: ch
+        real(dp) :: tmp
+        integer :: kmin, kmax
+
+        if(a0 < 0 .or. b0 < 0 .or. k0 < 0 ) call error_stop("Error(hypgeo_dist"&
+           //"_rvs): Hypergeometric distribution parameters must be positive"  &
+           //" integer")
+        if(k0 > a0 + b0) call error_stop("Error(hypgeo_dist_rvs): Sampling "   &
+           //"size k0 must not be greater than population size a0 + b0")
+
+        kmin = int(max(0_${k1}$, k0 - b0), int32)
+        kmax = int(min(k0, a0), int32)
+
+        write(ch, '("[",g0,",",g0,"]")') kmin, kmax
+        if(x < kmin .or. x > kmax ) call error_stop("Error(hypgeo_dist_pmf):"  &
+           //" Hypergeometric distribution support range is "                  &
+           //trim(adjustl(ch)))
+
+        n = a0 + b0
+        n1 = a0; n2 = b0; k = k0
+        tmp = lgf(n1, ONE) + lgf(n2, ONE) + lgf(k, ONE) + lgf(n - k, ONE) -    &
+              lgf(x, ONE) - lgf(n1 - x, ONE) - lgf(k - x, ONE) -               &
+              lgf(n2 - k + x, ONE) - lgf(n, ONE)
+        res = real(exp(tmp), kind = sp)
+        return
+    end function hypgeo_dist_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function hypgeo_dist_cdf_${t1[0]}$${k1}$(x, k0, a0, b0)   &
+        result(res)
+    !
+    ! Hypergeometric Probability Distribution Function
+    !
+        ${t1}$, intent(in) :: x, k0, a0, b0
+        real :: res
+        ${t1}$ :: k, n1, n2, n
+
+        character(len = 100) :: ch
+        real(dp) :: tmp
+        real :: sum, f
+        integer :: kmin, kmax, m, i
+
+        if(a0 < 0 .or. b0 < 0 .or. k0 < 0 ) call error_stop("Error(hypgeo_dist"&
+            //"_rvs): Hypergeometric distribution parameters must be positive" &
+            //" integer")
+        if(k0 > a0 + b0) call error_stop("Error(hypgeo_dist_rvs): Sampling "   &
+            //"size k0 must not be greater than population size a0 + b0")
+
+        kmin = int(max(0_${k1}$, k0 - b0), int32)
+        kmax = int(min(k0, a0), int32)
+
+        write(ch, '("[",g0,",",g0,"]")') kmin, kmax
+        if(x < kmin .or. x > kmax ) call error_stop("Error(hypgeo_dist_pmf):"  &
+           //" Hypergeometric distribution suppor range is "//trim(adjustl(ch)))
+
+        n = a0 + b0
+        n1 = a0; n2 = b0; k = k0
+        m = (k + 1) * (n1 + 1) / real(n + 2)
+        tmp = lgf(n1, ONE) + lgf(n2, ONE) + lgf(k, ONE) + lgf(n - k, ONE) -    &
+              lgf(m, ONE) - lgf(n1 - m, ONE) - lgf(k - m, ONE) -               &
+              lgf(n2 -k + m, ONE) - lgf(n, ONE)
+        tmp = exp(tmp)
+        f = 1.0; sum = 0.0; i = m
+        do
+            i = i - 1
+            f = f * (i + 1) * (n2 - k + i + 1) / real((n1 - i) * (k - i))
+            if(x < i) cycle
+            sum = sum + f
+            if(i == kmin) exit
+        end do
+        if(x == m) then
+            sum = sum + 1.0
+        elseif(x > m) then
+            f = 1.0; sum = sum + 1.0
+            do i = m + 1, x
+                f = f * (n1 - i +1) * (k - i + 1) / real(i * (n2 - k + i))
+                sum = sum + f
+            end do
+        endif
+        res = real(sum * tmp, sp)
+    end function hypgeo_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+end module statislib_hypgeo

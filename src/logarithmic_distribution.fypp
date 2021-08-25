@@ -1,0 +1,209 @@
+#:include "common.fypp"
+module statislib_logarithmic
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use statislib_uniform, only : uni=>uniform_distribution_rvs
+    use statislib_special
+
+    implicit none
+    private
+    real(dp), parameter  :: ONE = 1.0_dp
+
+
+    public :: logarithmic_distribution_rvs
+    public :: logarithmic_distribution_pmf
+    public :: logarithmic_distribution_cdf
+
+
+
+    interface logarithmic_distribution_rvs
+    !! Version 0.1
+    !!
+    !! Logarithmic Distribution Random Variates
+    !! ([Document](../doc/statislib_logarithmic.md))
+    !!
+
+        module procedure logarith_dist_rvs         ! 1 dummy
+        module procedure logarith_dist_rvs_array   ! 2 dummy
+
+    end interface logarithmic_distribution_rvs
+
+
+
+    interface logarithmic_distribution_pmf
+    !! Version 0.1
+    !!
+    !! Logarithmic Distribution Probability Density Function
+    !! ([Document](../doc/statislib_logarithmic.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure logarith_dist_pmf_${t1[0]}$${k1}$
+        #:endfor
+    end interface logarithmic_distribution_pmf
+
+
+
+    interface logarithmic_distribution_cdf
+    !! Version 0.1
+    !!
+    !! Logarithmic Distribution Cumulative Distribution Function
+    !! ([Document](../doc/statislib_logarithmic.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure logarith_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface logarithmic_distribution_cdf
+
+
+
+
+contains
+
+
+    impure elemental function logarith_dist_rvs(p0) result(res)
+    !
+    ! For p < 0.9  algorithm is based on LS inversion sequential search.
+    !
+    ! For p >=0.9, algorithm is based on LBM by A. W. Kemp, "Efficient Generation
+    ! of Logarithmically Distributed Pseudo-random Variables" Appl.Statist. 30(3)
+    ! 1981, p249
+    !
+    ! Fortran 90 program by Jim-215-Fisher
+    !
+        real, intent(in) :: p0
+        integer :: res, k
+        real, save :: p, r
+        real(dp), save :: q
+        real :: v1, v2
+        real(dp) :: sum, u
+
+
+        if(p0 < 0.0 .or. p0 > 1.0) call error_stop("Error(logarith_dist_rvs): "&
+           //" probability value must be in the range of [0., 1.0]")
+
+        if(p /= p0) then           !test parameter changes
+           p = p0; r = log(1.0 - p); q = real(p, dp)
+           q = - q / log(ONE - q)
+        end if
+
+        if(p < 0.9) then       !use LS algorithm
+            u = uni(ONE)       !need double precision uniform random variates
+            k = 1; sum = q
+            do
+                if(u <= sum) exit
+                u = u - sum
+                k = k + 1
+                sum = sum * p * real((k - 1), dp) / real(k, dp)
+            end do
+        else                   !use LBM algorithm
+            k = 1
+            v2 = uni( )
+            if(v2 < p) then
+                v1 = uni( )
+                k = 1 + log(v2) / log(1.0 - exp(r * v1))
+            end if
+        end if
+        res = k
+    end function logarith_dist_rvs
+
+
+
+
+    function logarith_dist_rvs_array(p0, array_size) result(res)
+    
+        real, intent(in) :: p0
+        integer, intent(in) :: array_size
+        integer :: res(array_size)
+        integer :: k, i
+        real, save :: p, r
+        real(dp), save :: q
+        real :: v1, v2
+        real(dp) :: sum, u
+
+
+        if(p0 < 0.0 .or. p0 > 1.0) call error_stop("Error(logarith_dist_rvs): "&
+           //" probability value must be in the range of [0., 1.0]")
+
+        if(p /= p0) then           !test parameter changes
+           p = p0; r = log(1.0 - p); q = real(p, dp)
+           q = - q / log(ONE - q)
+        end if
+
+        if(p < 0.9) then           !use LS algorithm
+            do i = 1, array_size
+                u = uni(ONE)
+                k = 1; sum = q
+                do
+                    if(u <= sum) exit
+                    u = u - sum
+                    k = k + 1
+                    sum = sum * p * real((k - 1), dp) / real(k, dp)
+                end do
+                res(i) = k
+            end do
+        else                      !use LBM algorithm
+            do i = 1, array_size
+                k = 1
+                v2 = uni( )
+                if(v2 < p) then
+                    v1 = uni( )
+                    k = 1 + log(v2) / log(1.0 - exp(r * v1))
+                end if
+                res(i) = k
+            end do
+        end if
+    end function logarith_dist_rvs_array
+
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function logarith_dist_pmf_${t1[0]}$${k1}$(k, p) result(res)
+    !
+    ! Logarithmic Probability Mass Function
+    !
+        ${t1}$, intent(in) :: k
+        real, intent(in) :: p
+        real :: res
+
+        if(p < 0.0 .or. p > 1.0) call error_stop("Error(logarith_dist_rvs): "  &
+          //" probability value must be in the range of [0., 1.0]")
+        if(k < 1) call error_stop("Error(logarith_dist_pmf): logarithmic "     &
+          //"distribution support range is positive integer")
+
+        res = - p ** k / (k * log(1.0 - p))
+    end function logarith_dist_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function logarith_dist_cdf_${t1[0]}$${k1}$(k, p) result(res)
+    !
+    ! Logarithmic Probability Distribution Function
+    !
+        ${t1}$, intent(in) :: k
+        real, intent(in) :: p
+        real :: res
+        real :: sum, q
+        integer :: i
+
+        if(p < 0.0 .or. p > 1.0) call error_stop("Error(logarith_dist_rvs): "  &
+          //" probability value must be in the range of [0., 1.0]")
+        if(k < 1) call error_stop("Error(logarith_dist_pmf): logarithmic "     &
+          //"distribution support range is positive integer")
+
+        q = p; sum = q
+        do i = 2, k
+            q = (i - 1) * p * q / i
+            sum = sum + q
+        end do
+        res = - sum / log(1.0 - p)
+    end function logarith_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+end module statislib_logarithmic

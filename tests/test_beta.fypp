@@ -14,7 +14,7 @@ program test_distribution_beta
     #:endfor
     logical ::  warn = .true.
     integer :: put, get
-	
+
     put = 1234567
     call random_seed(put, get)
 
@@ -23,20 +23,24 @@ program test_distribution_beta
     #:for k1, t1 in RC_KINDS_TYPES
     call test_beta_rvs_${t1[0]}$${k1}$
     #:endfor
-    
+
     #:for k1, t1 in RC_KINDS_TYPES
     call test_beta_pdf_${t1[0]}$${k1}$
     #:endfor
-    
+
     #:for k1, t1 in RC_KINDS_TYPES
     call test_beta_cdf_${t1[0]}$${k1}$
     #:endfor
 
 
 
+
+
+
 contains
 
     subroutine test_beta_random_generator
+
         integer, parameter :: num = 1000000
         integer, parameter :: array_size = 1000
         integer :: i, j, freq(0:array_size - 1)
@@ -54,22 +58,25 @@ contains
         do i = 0, array_size - 1
            chisq = chisq + (freq(i) - expct) ** 2 / expct
         end do
-        write(*,*) "The critical values for chi-squared with 1000 d. of f. is"  &
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
                    //" 1143.92"
         write(*,*) "Chi-squared for beta random generator is : ", chisq
-        call check((chisq < 1143.9),                                            &
+        call check((chisq < 1143.9),                                           &
                msg="beta randomness failed chi-squared test", warn=warn)
     end subroutine test_beta_random_generator
 
 
 
+
     #:for k1, t1 in RC_KINDS_TYPES
     subroutine test_beta_rvs_${t1[0]}$${k1}$
+
         ${t1}$ :: res(10), a, b
-        integer :: i, n, k = 5
-        integer :: put, get
+        integer, parameter :: k = 5
+        integer :: i, n, put, get
         #:if t1[0] == "r"
-        ${t1}$ :: ans(10) = [0.744399697952416243334363353017662363_${k1}$,    &
+        ${t1}$, parameter :: ans(10) =                                         &
+                            [0.744399697952416243334363353017662363_${k1}$,    &
                              0.785582064888561104409969900319307115_${k1}$,    &
                              0.290228167791285215460609614976244262_${k1}$,    &
                              0.540957122824810300186112642749043673_${k1}$,    &
@@ -80,7 +87,8 @@ contains
                              0.438125081488452966935618841567308566_${k1}$,    &
                              0.635255468090749026953184924665020348_${k1}$]
         #:else
-        ${t1}$ :: ans(10) = [(0.996593894945797558163416198727906880_${k1}$,   &
+        ${t1}$, parameter :: ans(10) =                                         &
+                            [(0.996593894945797558163416198727906880_${k1}$,   &
                               0.132598000233262366166275960014792683_${k1}$),  &
                              (0.390100279193128267998817589162392551_${k1}$,   &
                               0.594960539319605102054215589048597662_${k1}$),  &
@@ -101,7 +109,7 @@ contains
                              (0.656763996944608477801486502669830627_${k1}$,   &
                               0.870919913077248989108181221896598931_${k1}$)]
         #:endif
-        
+
         print *, "Test beta_distribution_rvs_${t1[0]}$${k1}$"
         put = 639741825
         call random_seed(put, get)
@@ -114,7 +122,7 @@ contains
             res(i) = beta_rvs(a, b)
         end do
         res(6:10) = beta_rvs(a, b, k)
-        call check(all(abs(res - ans) < ${k1}$tol), &
+        call check(all(abs(res - ans) < ${k1}$tol),                            &
             msg="beta_distribution_rvs_${t1[0]}$${k1}$ failed", warn=warn)
     end subroutine test_beta_rvs_${t1[0]}$${k1}$
 
@@ -122,24 +130,28 @@ contains
 
 
 
+
     #:for k1, t1 in RC_KINDS_TYPES
     subroutine test_beta_pdf_${t1[0]}$${k1}$
+
         ${t1}$ :: x1, x2(3,4), a, b
         real :: res(3,5)
         integer :: i, n
         integer :: put, get
         #:if t1[0] == "r"
-        real :: ans(15) = [1.97584832, 1.97584832, 1.97584832, 1.94792151,      &
-                           1.05610514, 1.63085556, 1.44469929, 1.78598392,      &
-                           1.03530371, 1.32163048, 1.95935822, 1.49064910,      &
-                           1.22708333, 0.816426575, 1.93443334]
+        real, parameter :: ans(15) =                                           &
+                         [1.97584832, 1.97584832, 1.97584832, 1.94792151,      &
+                          1.05610514, 1.63085556, 1.44469929, 1.78598392,      &
+                          1.03530371, 1.32163048, 1.95935822, 1.49064910,      &
+                          1.22708333, 0.816426575, 1.93443334]
         #:else
-        real :: ans(15) = [2.79032898, 2.79032898, 2.79032898, 0.831092536,     &
-                           0.859560609, 0.833086491, 2.18498087, 0.611756265,   &
-                           5.17011976, 0.805453956, 2.12247658, 0.969030082,    &
-                           1.92922175, 0.700230777, 6.4548239]
+        real, parameter :: ans(15) =                                           &
+                         [2.79032898, 2.79032898, 2.79032898, 0.831092536,     &
+                          0.859560609, 0.833086491, 2.18498087, 0.611756265,   &
+                          5.17011976, 0.805453956, 2.12247658, 0.969030082,    &
+                          1.92922175, 0.700230777, 6.4548239]
         #:endif
-        
+
         print *, "Test beta_distribution_pdf_${t1[0]}$${k1}$"
         put = 345987126
         call random_seed(put, get)
@@ -152,7 +164,7 @@ contains
         x2 = reshape(beta_rvs(a, b, 12), [3,4])
         res(:,1) = beta_pdf(x1, a, b)
         res(:, 2:5) = beta_pdf(x2, a, b)
-        call check(all(abs(res - reshape(ans, [3,5])) < sptol), &
+        call check(all(abs(res - reshape(ans, [3,5])) < sptol),                &
             msg="beta_distribution_pdf_${t1[0]}$${k1}$ failed", warn=warn)
     end subroutine test_beta_pdf_${t1[0]}$${k1}$
 
@@ -162,6 +174,7 @@ contains
 
     #:for k1, t1 in RC_KINDS_TYPES
     subroutine test_beta_cdf_${t1[0]}$${k1}$
+
         ${t1}$ :: x1, x2(3,4), a, b
         real :: res(3,5)
         integer :: i, n
@@ -178,7 +191,7 @@ contains
                            3.40392105E-02, 1.09316744E-02, 0.180127904,         &
                            0.654031873, 0.406583667]
         #:endif
-        
+
         print *, "Test beta_distribution_cdf_${t1[0]}$${k1}$"
         put = 567985123
         call random_seed(put, get)

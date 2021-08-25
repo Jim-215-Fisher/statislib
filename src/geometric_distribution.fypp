@@ -1,0 +1,138 @@
+#:include "common.fypp"
+module statislib_distribution_geometric
+    use stdlib_kinds
+    use stdlib_error, only : error_stop
+    use statislib_uniform, only : uni=>uniform_distribution_rvs
+
+    implicit none
+    private
+
+    public :: geometric_distribution_rvs
+    public :: geometric_distribution_pmf
+    public :: geometric_distribution_cdf
+
+
+
+    interface geometric_distribution_rvs
+    !! Version 0.1
+    !!
+    !! Geometric Distribution Random Variates
+    !! ([Document](../doc/statislib_geometric.md))
+    !!
+        module procedure geo_dist_rvs       ! 1 dummy
+        module procedure geo_dist_rvs_array ! 2 dummy
+    end interface geometric_distribution_rvs
+
+
+
+    interface geometric_distribution_pmf
+    !! Version 0.1
+    !!
+    !! Geometric Distribution Probability Density Function
+    !! ([Document](../doc/statislib_geometric.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure geo_dist_pmf_${t1[0]}$${k1}$
+        #:endfor
+    end interface geometric_distribution_pmf
+
+
+
+    interface geometric_distribution_cdf
+    !! Version 0.1
+    !!
+    !! Geometric Distribution Cumulative Distribution Function
+    !! ([Document](../doc/statislib_geometric.md))
+    !!
+        #:for k1, t1 in INT_KINDS_TYPES
+        module procedure geo_dist_cdf_${t1[0]}$${k1}$
+        #:endfor
+    end interface geometric_distribution_cdf
+
+
+
+
+contains
+
+
+    impure elemental function geo_dist_rvs(p) result(res)
+    !
+    ! Non-uniform Random Variable Generation, Luc Devroye, 1986, p. 499
+    !
+        real, intent(in) :: p
+        integer :: res
+        real, save :: p0 = 0.0, rlnp
+        real :: u
+
+        if(p < 0 .or. p > 1) call error_stop("Error(geo_dist_rvs): probability"&
+            //" must be in the range [0.0, 1.0]")
+        if(p /= p0) then
+            p0 = p
+            rlnp = 1. / log(1.0 - p0)
+        end if
+        u = log(uni( ))
+        res = u * rlnp
+    end function geo_dist_rvs
+
+
+
+    function geo_dist_rvs_array(p, array_size) result(res)
+        real, intent(in) :: p
+        integer, intent(in) :: array_size
+        integer :: res(array_size)
+        integer :: i
+        real :: u
+        real, save :: p0 = 0.0, rlnp
+
+        if(p < 0 .or. p > 1) call error_stop("Error(geo_dist_rvs): probability"&
+            //" must be in the range [0.0, 1.0]")
+        if(p /= p0) then
+            p0 = p
+            rlnp = 1. / log(1.0 - p0)
+        end if
+        do i = 1, array_size
+            u = log(uni( ))
+            res(i) = u * rlnp
+        end do
+    end function geo_dist_rvs_array
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function geo_dist_pmf_${t1[0]}$${k1}$(k, p) result(res)
+    !
+    ! Probability Mass Function
+    !
+        ${t1}$, intent(in) :: k
+        real :: res, q
+        real, intent(in) :: p
+
+        if(p < 0 .or. p > 1) call error_stop("Error(geo_dist_rvs): probability"&
+            //" must be in the range [0.0, 1.0]")
+        q = k * log(1.0 - p) + log(p)
+        res = exp(q)
+    end function geo_dist_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    impure elemental function geo_dist_cdf_${t1[0]}$${k1}$(k, p) result(res)
+    !
+    ! Probability Distribution Function
+    !
+        ${t1}$, intent(in) :: k
+        real, intent(in) :: p
+        real :: res, q
+
+        if(p < 0 .or. p > 1) call error_stop("Error(geo_dist_rvs): probability"&
+            //" must be in the range [0.0, 1.0]")
+        q = exp((k + 1) * log(1.0 - p))
+        res = 1.0 - q
+    end function geo_dist_cdf_${t1[0]}$${k1}$
+
+    #:endfor
+
+end module statislib_distribution_geometric

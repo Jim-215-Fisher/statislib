@@ -1,0 +1,170 @@
+#:include "common.fypp"
+program test_distribution_logarithmic
+    use stdlib_kinds
+    use stdlib_error, only : check
+    use stdlib_stats_distribution_PRNG, only : random_seed
+    use statislib_logarithmic, log_rvs => logarithmic_distribution_rvs,        &
+                               log_pmf => logarithmic_distribution_pmf,        &
+                               log_cdf => logarithmic_distribution_cdf
+
+    implicit none
+    #:for k1, t1 in REAL_KINDS_TYPES
+    ${t1}$, parameter :: ${k1}$tol = 1000 * epsilon(1.0_${k1}$)
+    #:endfor
+    logical ::  warn = .true.
+    integer :: put, get
+
+    put = 12345678
+    call random_seed(put, get)
+
+    call test_logarithmic_random_generator
+
+    call test_logarithmic_rvs
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_logarithmic_pmf_${t1[0]}$${k1}$
+    #:endfor
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    call test_logarithmic_cdf_${t1[0]}$${k1}$
+    #:endfor
+
+
+
+
+contains
+
+    subroutine test_logarithmic_random_generator
+    
+        integer, parameter :: num = 10000000
+        integer, parameter :: array_size = 1000
+        integer :: i, j, freq(1:array_size), k
+        real(dp) :: chisq, expct
+        real :: p
+
+        print *, ""
+        print *, "Test logarithmic random generator with chi-squared"
+        freq = 0; p = 0.45
+        do i = 1, num
+            j = log_rvs(p)
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        do i = 1, array_size
+           expct = num * exp(i * log(p) - log(real(i))) / (- log (1. - p))
+           if(expct < 1.0e-12) cycle
+           chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                   //" 1143.92"
+        write(*,*) "Chi-squared for logarithmic random generator is : ", chisq
+        call check((chisq < 1143.9),                                           &
+               msg="logarithmic randomness failed chi-squared test", warn=warn)
+        freq = 0; p = 0.96
+        do i = 1, num
+            j = log_rvs(p)
+            freq(j) = freq(j) + 1
+        end do
+        chisq = 0.0_dp
+        do i = 1, array_size
+           expct = num * exp(i * log(p) - log(real(i))) / (-log (1. - p))
+           if(expct < 1.0e-12) cycle
+           chisq = chisq + (freq(i) - expct) ** 2 / expct
+        end do
+        write(*,*) "The critical values for chi-squared with 1000 d. of f. is" &
+                   //" 1143.92"
+        write(*,*) "Chi-squared for logarithmic random generator is : ", chisq
+        call check((chisq < 1143.9),                                           &
+               msg="logarithmic randomness failed chi-squared test", warn=warn)
+    end subroutine test_logarithmic_random_generator
+
+
+
+
+    subroutine test_logarithmic_rvs
+    
+        real :: p
+        integer :: seed, get, res(10), i
+        integer, parameter :: ans(10) = [1, 2, 1, 1, 1, 12, 4, 8, 3, 1]
+
+        print *, "Test logarithmic_distribution_rvs"
+        seed = 852693417
+        call random_seed(seed, get)
+        p = 0.34
+        do i = 1, 5
+          res(i) = log_rvs(p)
+        end do
+        p = 0.97
+        res(6:10) = log_rvs(p, 5)
+        call check(all(res == ans),                                            &
+            msg="logarithmic_distribution_rvs failed", warn=warn)
+    end subroutine test_logarithmic_rvs
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_logarithmic_pmf_${t1[0]}$${k1}$
+    
+        ${t1}$ :: x1, x2(2,3,3)
+        integer :: seed, get
+        real :: p, res(2,3,4)
+        real, parameter :: ans(24) =                                           &
+                          [7.03252032E-02, 7.03252032E-02, 7.03252032E-02,     &
+                           7.03252032E-02, 7.03252032E-02, 7.03252032E-02,     &
+                           2.17441898E-02, 0.349721342, 0.349721342,           &
+                           0.349721342, 0.162620425, 6.44169888E-03,           &
+                           5.23219518E-02, 3.46291158E-03, 1.53871775E-02,     &
+                           0.162620425, 1.31175676E-02, 4.05495092E-02,        &
+                           7.03252032E-02, 0.162620425, 0.349721342,           &
+                           0.100824662, 0.349721342, 5.23219518E-02]
+
+        print *, "Test logarithmic_distribution_pmf_${k1}$"
+        seed = 630852741
+        call random_seed(seed, get)
+        p = 0.93
+        x1 = log_rvs(p)
+        !4
+        x2 = reshape(log_rvs(p, 18), [2,3,3])
+        !9    1    1    1    2   17    5   22   11    2   12    6    4
+        !2    1    3    1    5
+        res(:,:,1) = log_pmf(x1, p)
+        res(:,:,2:4) = log_pmf(x2, p)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="logarithmic_distribution_pmf_${k1}$ failed", warn=warn)
+    end subroutine test_logarithmic_pmf_${t1[0]}$${k1}$
+
+    #:endfor
+
+
+
+
+    #:for k1, t1 in INT_KINDS_TYPES
+    subroutine test_logarithmic_cdf_${t1[0]}$${k1}$
+    
+        ${t1}$ :: x(2,3,4)
+        integer :: seed, get
+        real :: p, res(2,3,4)
+        real, parameter :: ans(24) =                                           &
+                         [0.400442243, 0.269385964, 0.485454082, 0.485454082,  &
+                          0.269385964, 0.400442243, 0.269385964, 0.400442243,  &
+                          0.667591751, 0.269385964, 0.400442243, 0.269385964,  &
+                          0.740495920, 0.634936452, 0.269385964, 0.547491431,  &
+                          0.871259451, 0.994059980, 0.269385964, 0.595781386,  &
+                          0.634936452, 0.936299682, 0.719439268, 0.269385964]
+
+        print *, "Test logarithmic_distribution_cdf_${k1}$"
+        seed = 17428396
+        call random_seed(seed, get)
+        p = 0.973
+        x = reshape(log_rvs(p, 24), [2,3,4])
+        !2    1    3    3    1    2    1    2    7    1    2    1   10    6
+        !1    4   21   95    1    5    6   35    9    1
+        res(:,:,:) = log_cdf(x, p)
+        call check(all(abs(res - reshape(ans, [2,3,4])) < sptol),              &
+            msg="logarithmic_distribution_cdf_${k1}$ failed", warn=warn)
+    end subroutine test_logarithmic_cdf_${t1[0]}$${k1}$
+
+  #:endfor
+
+end program test_distribution_logarithmic

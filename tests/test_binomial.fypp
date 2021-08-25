@@ -3,22 +3,21 @@ program test_distribution_binomial
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_binomial,                                                    &
-                                        binom_rvs => binomial_distribution_rvs,&
-                                        binom_pmf => binomial_distribution_pmf,&
-                                        binom_cdf => binomial_distribution_cdf
+    use statislib_binomial, binom_rvs => binomial_distribution_rvs,            &
+                            binom_pmf => binomial_distribution_pmf,            &
+                            binom_cdf => binomial_distribution_cdf
     use statislib_special, only : log_factorial
-    
+
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES
     ${t1}$, parameter :: ${k1}$tol = 1000 * epsilon(1.0_${k1}$)
     #:endfor
     logical ::  warn = .true.
     integer :: put, get
-    
+
     put = 1234567
     call random_seed(put, get)
- 
+
     call test_binomial_random_generator
 
     #:for k1, t1 in INT_KINDS_TYPES
@@ -35,9 +34,11 @@ program test_distribution_binomial
 
 
 
+
 contains
 
     subroutine test_binomial_random_generator
+
         integer, parameter :: num = 10000000
         integer, parameter :: arry_size = 1000
         integer :: i, j, freq(0:array_size - 1), n
@@ -70,11 +71,13 @@ contains
 
     #:for k1, t1 in INT_KINDS_TYPES
     subroutine test_binomial_rvs_${t1[0]}$${k1}$
+
         ${t1}$ :: res(20), n
         integer :: i
         real :: p
         integer :: seed, get
-        ${t1}$ :: ans(20) = [58_${k1}$, 51_${k1}$, 50_${k1}$, 44_${k1}$,       &
+        ${t1}$, parameter :: ans(20) =                                         &
+                            [58_${k1}$, 51_${k1}$, 50_${k1}$, 44_${k1}$,       &
                              58_${k1}$, 51_${k1}$, 50_${k1}$, 55_${k1}$,       &
                              63_${k1}$, 55_${k1}$, 10_${k1}$, 13_${k1}$,       &
                              10_${k1}$, 11_${k1}$, 8_${k1}$, 6_${k1}$,         &
@@ -106,11 +109,13 @@ contains
 
     #:for k1, t1 in INT_KINDS_TYPES
     subroutine test_binomial_pmf_${t1[0]}$${k1}$
+
         ${t1}$ :: x1, x2(2,3,3),  n
         integer :: i, m
         integer :: seed, get
         real :: p, res(2,3,4)
-        real :: ans(24) = [0.109103374, 0.109103374, 0.109103374, 0.109103374, &
+        real, parameter :: ans(24) =                                           &
+                          [0.109103374, 0.109103374, 0.109103374, 0.109103374, &
                            0.109103374, 0.109103374, 0.110863127, 0.110863127, &
                            2.59381924E-02, 0.109103374, 9.87374857E-02,        &
                            9.87374857E-02, 9.58787128E-02, 4.15466949E-02,     &
@@ -140,18 +145,20 @@ contains
 
     #:for k1, t1 in INT_KINDS_TYPES
     subroutine test_binomial_cdf_${t1[0]}$${k1}$
+
         ${t1}$ :: x(2,3,4),  n
         integer :: i, m
         integer :: seed, get
         real :: p, res(2,3,4)
-        real :: ans(24) = [0.978971064, 0.993534148, 0.872478724, 0.250010669, &
+        real, parameter :: ans(24) =                                           &
+                          [0.978971064, 0.993534148, 0.872478724, 0.250010669, &
                            5.09519465E-02, 0.125598967, 0.943473637,           &
                            0.872478724, 0.978971064, 0.595598698, 0.250010669, &
                            0.125598967, 0.872478724, 0.415892929, 0.595598698, &
                            0.415892929, 0.415892929, 0.595598698, 0.978971064, &
                            0.595598698, 0.595598698, 0.415892929, 0.755337179, &
                            0.125598967]
-                           
+
         print *, "Test binomial_distribution_cdf_${k1}$"
         seed = 17428396
         call random_seed(seed, get)
