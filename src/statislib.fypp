@@ -1,0 +1,13 @@
+module statislib
+    use statislib_uniform
+    use statislib_normal
+    use statislib_exponential
+    use statislib_gamma
+    use statislib_beta
+    use statislib_binomial
+    use statislib_geometric
+    use statislib_hypergeometric
+    use statislib_logarithmic
+    use statislib_negbinomial
+    use statislib_poisson
+end module statislib

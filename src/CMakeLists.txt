@@ -2,6 +2,7 @@
 
 # Create a list of the files to be preprocessed
 set(fyppFiles
+    statislib.fypp
     common.fypp
     special_function.fypp
     uniform_distribution.fypp
@@ -9,6 +10,12 @@ set(fyppFiles
     exponential_distribution.fypp
     gamma_distribution.fypp
     beta_distribution.fypp
+    binomial_distribution.fypp
+    geometric_distribution.fypp
+    hypergeometric_distribution.fypp
+    logarithmic_distribution.fypp
+    negbinomial_distribution.fypp
+    poisson_distribution.fypp
 )
 
 
