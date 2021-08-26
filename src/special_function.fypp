@@ -79,7 +79,7 @@ module statislib_special
 
         #: for k1, t1 in INT_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-        module procedure l_factorial_${t1[0]}$${k1}$${k2}$ !2 dummy
+        module procedure l_factorial_${t1[0]}$${k1}$${k2}$  !2 dummies
           #:endfor
         #:endfor
     end interface log_factorial
@@ -91,9 +91,7 @@ module statislib_special
     !
         #:for k1, t1 in IR_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-            #:if not ((t1[0] == "r") and (k1 != k2))
         module procedure ingamma_low_${t1[0]}$${k1}$${k2}$
-            #:endif
           #:endfor
         #:endfor
     end interface lower_incomplete_gamma
@@ -105,9 +103,7 @@ module statislib_special
     !
         #:for k1, t1 in IR_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-            #:if not ((t1[0] == "r") and (k1 != k2))
         module procedure l_ingamma_low_${t1[0]}$${k1}$${k2}$
-            #:endif
           #:endfor
         #:endfor
     end interface log_lower_incomplete_gamma
@@ -119,9 +115,7 @@ module statislib_special
     !
         #:for k1, t1 in IR_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-            #:if not ((t1[0] == "r") and (k1 != k2))
         module procedure ingamma_up_${t1[0]}$${k1}$${k2}$
-            #:endif
           #:endfor
         #:endfor
     end interface upper_incomplete_gamma
@@ -132,9 +126,7 @@ module statislib_special
     ! Logrithm of upper incomplete gamma function
         #:for k1, t1 in IR_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-            #:if not ((t1[0] == "r") and (k1 != k2))
         module procedure l_ingamma_up_${t1[0]}$${k1}$${k2}$
-            #:endif
           #:endfor
         #:endfor
     end interface log_upper_incomplete_gamma
@@ -146,9 +138,7 @@ module statislib_special
     !
         #:for k1, t1 in IR_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-            #:if not ((t1[0] == "r") and (k1 != k2))
         module procedure regamma_p_${t1[0]}$${k1}$${k2}$
-            #:endif
           #:endfor
         #:endfor
     end interface regularized_gamma_p
@@ -160,9 +150,7 @@ module statislib_special
     !
         #:for k1, t1 in IR_KINDS_TYPES
           #:for k2, t2 in REAL_KINDS_TYPES
-            #:if not ((t1[0] == "r") and (k1 != k2))
         module procedure regamma_q_${t1[0]}$${k1}$${k2}$
-            #:endif
           #:endfor
         #:endfor
     end interface regularized_gamma_q
@@ -386,7 +374,7 @@ contains
       #:endif
     impure elemental function gpx_${t1[0]}$${k1}$(s, x) result(res)
     !
-    ! Approximation of incomplete gamma G function with real auguments s.
+    ! Approximation of incomplete gamma G function with real arguments s.
     !
     ! Based on Rémy Abergel and Lionel Moisan "Algorithm 1006, Fast and
     ! Accurate Evaluation of a Generalized Incomplete Gamma Function", ACM
@@ -395,7 +383,7 @@ contains
     ! Fortran 90 program by Jim-215-Fisher
     !
         ${t1}$, intent(in) :: x, s
-        real(${k2}$) :: res
+        real(${k1}$) :: res
         ${t1}$ :: p_lim
         real(${k2}$) :: a, b, g, c, d, y, dm
         integer :: n
@@ -478,7 +466,7 @@ contains
         #:endif
     impure elemental function gpx_${t1[0]}$${k1}$${k2}$(s, x) result(res)
     !
-    ! Approximation of incomplete gamma G function with integer augument s.
+    ! Approximation of incomplete gamma G function with integer argument s.
     !
     ! Based on Rémy Abergel and Lionel Moisan "Algorithm 1006, Fast and
     ! Accurate Evaluation of a Generalized Incomplete Gamma Function", ACM
@@ -486,7 +474,7 @@ contains
     !
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        real(${k3}$) :: res
+        real(${k2}$) :: res
         ${t2}$ :: p_lim
         real(${k3}$) :: a, b, g, c, d, y, dm
         integer :: n
@@ -577,14 +565,14 @@ contains
 
     #:for k1, t1 in IR_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
-       #:if not ((t1[0] == "r") and (k1 != k2))
-        #:if k2 == "sp"
+        @:comp(k1, t1, k2, t2)
+        #:if res_kind == "sp"
           ! single precision use double variables
           #:set k3 = "dp"
         #:else
           ! double/quadruple precision use quadruple variables
           #:set k3 = "qp"
-        #:endif
+       #:endif
     impure elemental function ingamma_low_${t1[0]}$${k1}$${k2}$(s, x)          &
         result(res)
     !
@@ -592,7 +580,7 @@ contains
     !
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${t2}$ :: res
+        ${res_type}$ :: res
         real(${k3}$) :: s1, y, xx, ss
 
         #:if t1[0] == "i"
@@ -609,7 +597,7 @@ contains
         elseif(x > 0.0_${k2}$ .and. x <= real(s, ${k2}$)) then
             s1 = -xx + ss * log(xx)
             res = gpx(s,x) * exp(s1)
-        elseif(x > real(s, ${k2}$)) then
+        elseif(real(x, ${k3}$) > real(s, ${k3}$)) then
             s1 = loggamma(ss)
             y = 1.0_${k3}$ - exp(-xx + ss * log(xx) - s1) * gpx(s,x)
             res = exp(s1 + log(y))
@@ -618,7 +606,6 @@ contains
             res = (-1) ** s * gpx(s,x) * exp(s1)
         endif
     end function ingamma_low_${t1[0]}$${k1}$${k2}$
-        #:endif
       #:endfor
     #:endfor
 
@@ -626,8 +613,8 @@ contains
 
     #:for k1, t1 in IR_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
-        #:if not ((t1[0] == "r") and (k1 != k2))
-          #:if k2 == "sp"
+        @:comp(k1, t1, k2, t2)
+          #:if res_kind == "sp"
             ! single precision use double variables
             #:set k3 = "dp"
           #:else
@@ -639,7 +626,7 @@ contains
 
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${t2}$ :: res
+        ${res_type}$ :: res
         real(${k3}$) :: s1, y, xx, ss
 
         #:if t1[0] == "i"
@@ -665,7 +652,6 @@ contains
         endif
     end function l_ingamma_low_${t1[0]}$${k1}$${k2}$
 
-        #:endif
       #:endfor
     #:endfor
 
@@ -673,8 +659,8 @@ contains
 
     #:for k1, t1 in IR_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
-        #:if not ((t1[0] == "r") and (k1 != k2))
-          #:if k2 == "sp"
+        @:comp(k1, t1, k2, t2)
+          #:if res_kind == "sp"
             ! single precision use double variables
             #:set k3 = "dp"
           #:else
@@ -688,7 +674,7 @@ contains
     !
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${t2}$ :: res
+        ${res_type}$ :: res
         real(${k3}$) :: s1, y, xx, ss
 
         #:if t1[0] == "i"
@@ -717,7 +703,6 @@ contains
         endif
     end function ingamma_up_${t1[0]}$${k1}$${k2}$
 
-        #:endif
       #:endfor
     #:endfor
 
@@ -725,8 +710,8 @@ contains
 
     #:for k1, t1 in IR_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
-        #:if not ((t1[0] == "r") and ( k1 != k2))
-          #:if k2 == "sp"
+        @:comp(k1, t1, k2, t2)
+          #:if res_kind == "sp"
             ! single precision use double variables
             #:set k3 = "dp"
           #:else
@@ -738,7 +723,7 @@ contains
 
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${t2}$ :: res
+        ${res_type$ :: res
         real(${k3}$) :: s1, y, xx, ss
 
         #:if t1[0] == "i"
@@ -762,7 +747,6 @@ contains
         endif
     end function l_ingamma_up_${t1[0]}$${k1}$${k2}$
 
-        #:endif
       #:endfor
     #:endfor
 
@@ -770,8 +754,8 @@ contains
 
     #:for k1, t1 in IR_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
-        #:if not ((t1[0] == "r") and (k1 != k2))
-          #:if k2 == "sp"
+        @:comp(k1, t1, k2, t2)
+          #:if res_kind == "sp"
             ! single precision use double variables
             #:set k3 = "dp"
           #:else
@@ -784,7 +768,7 @@ contains
     !
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${t2}$ :: res
+        ${res_type}$ :: res
         real(${k3}$) :: s1, xx, ss
 
         #:if t1[0] == "i"
@@ -808,7 +792,6 @@ contains
         endif
     end function regamma_p_${t1[0]}$${k1}$${k2}$
 
-        #:endif
       #:endfor
     #:endfor
 
@@ -816,22 +799,21 @@ contains
 
     #:for k1, t1 in IR_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
-        #:if not ((t1[0] == "r") and (k1 != k2))
-          #:if k2 == "sp"
+        @:comp(k1, t1, k2, t2)
+          #:if res_kind == "sp"
             ! single precision use double variables
             #:set k3 = "dp"
           #:else
             ! double/quadruple precision use quadruple variables
             #:set k3 = "qp"
           #:endif
-    impure elemental function regamma_q_${t1[0]}$${k1}$${k2}$(s, x)            &
-        result(res)
+    impure elemental function regamma_q_${t1[0]}$${k1}$${k2}$(s, x) result(res)
     !
     ! Approximation of regularized incomplet gamma function Q(s,x)
     !
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${t2}$ :: res
+        ${res_type}$ :: res
         real(${k3}$) :: s1, xx, ss
 
         #:if t1[0] == "i"
@@ -855,7 +837,6 @@ contains
         endif
      end function regamma_q_${t1[0]}$${k1}$${k2}$
 
-         #:endif
       #:endfor
     #:endfor
 

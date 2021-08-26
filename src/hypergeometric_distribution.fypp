@@ -16,7 +16,7 @@ module statislib_hypgeo
 
 
 
-    interfac hypergeometric_distribution_rvs
+    interface hypergeometric_distribution_rvs
     !! Version 0.1
     !!
     !! Hypergeometric Distribution Random Variates

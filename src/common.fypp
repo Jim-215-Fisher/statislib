@@ -24,3 +24,47 @@
 
 #! Collected (kind, type) tuples for integer types
 #:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
+
+#! Compare any two types and get the stronger type and kind results
+#:def comp(k1, t1, k2, t2)
+  #:global res_type
+  #:global res_kind
+  #:if t1[0] == "i"
+    #:if t2[0] == "i"
+      #:set n1, n2 = int(k1[3:]), int(k2[3:])
+      #:if n1 <= n2
+        #:set res_type, res_kind = t2, k2
+      #:else
+        #:set res_type, res_kind = t1, k1
+      #:endif
+    #:else
+      #:set res_type, res_kind = t2, k2
+    #:endif
+  #:elif t1[0] == "r"
+    #:if t2[0] == "i"
+      #:set res_type, res_kind = t1, k1
+    #:elif t2[0] == "c"
+      #:set res_type, res_kind = t2, k2
+    #:elif k1 == "qp"
+      #:set res_type, res_kind = t1, k1
+    #:elif k1 == "sp"
+      #:set res_type, res_kind = t2, k2
+    #:elif k1 == "dp" and k2 != "qp"
+      #:set res_type, res_kind = t1, k1
+    #:else
+      #:set res_type, res_kind = t2, k2
+    #:endif
+  #:else
+    #:if t2[0] != "c"
+      #:set res_type, res_kind = t1, k1
+    #:elif k1 == "qp"
+      #:set res_type, res_kind = t1, k1
+    #:elif k1 == "sp"
+      #:set res_type, res_kind = t2, k2
+    #:elif k1 == "dp" and k2 != "qp"
+      #:set res_type, res_kind = t1, k1
+    #:else
+      #:set res_type, res_kind = t2, k2
+    #:endif
+  #:endif
+#:enddef

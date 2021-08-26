@@ -20,6 +20,17 @@ function(fypp_f90 srcfiles tgtfiles)
 endfunction()
 
 
+
+macro(ADDTEST name)
+    add_executable(test_${name} test_${name}.f90)
+    target_link_libraries(test_${name} ${PROJECT_NAME})
+    add_test(NAME ${name}
+             COMMAND $<TARGET_FILE:test_${name}> ${CMAKE_CURRENT_BINARY_DIR}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endmacro(ADDTEST)
+
+
+
 # --- compiler options
 if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
   if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 9.0)
@@ -41,3 +52,4 @@ if(NOT FYPP)
 endif()
 
 add_subdirectory(src)
+add_subdirectory(tests)
