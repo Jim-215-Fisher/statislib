@@ -6,7 +6,7 @@ title: Statislib
 
 [TOC]
 
-## `negbinomial_distribution_rvs` - Negative binomial distribution random variates
+## `negbinomial_distribution_rvs` - negative binomial distribution random variates
 
 ### Status
 
@@ -14,7 +14,7 @@ Release
 
 ### Description
 
-A negative binomial discrete random variate distribution NB(n, p), also known as Pascal distribution, is used to characterize the number of failure in a sequence of Bernoullie trials before a specified number (n) of success occurs.
+A negative binomial discrete random variate distribution `NB(n, p)`, also known as Pascal distribution, is used to characterize the number of failure in a sequence of Bernoullie trials before a specified number (n) of success occurs.
 
 ### Syntax
 
@@ -64,7 +64,7 @@ program demo_nb_rvs
 end program demo_nb_rvs
 ```
 
-## `negbinomial_distribution_pmf` - Negative binomial probability mass function
+## `negbinomial_distribution_pmf` - negative binomial probability mass function
 
 ### Status
 
@@ -74,7 +74,7 @@ Release
 
 The probability mass function of the discrete negative binomial distribution.
 
-f(k; n, p) = C(k+n-1, n-1) p<sup>n</sup> (1-p)<sup>k</sup>
+f(k; n, p) = C(k + n - 1, n - 1) p<sup>n</sup> (1 - p)<sup>k</sup>
 
 where C is the binomial coefficient
 
@@ -130,7 +130,7 @@ program demo_nb_pmf
 end program demo_nb_pmf
 ```
 
-## `negbinomial_distribution_cdf` - Negative binomial cumulative distribution function
+## `negbinomial_distribution_cdf` - negative binomial cumulative distribution function
 
 ### Status
 
@@ -140,7 +140,7 @@ Release
 
 The cumuative distribution function of the discrete negative binomial distribution.
 
-F(k; n, p) = 1 - B(p, K+1, n) / B(k+1, n)
+F(k; n, p) = 1 - B(p, K + 1, n) / B(k + 1, n)
 
 where B is the regularized incomplet beta function$$
 

@@ -16,13 +16,13 @@ Release
 
 A normal continuous random variate distribution, also known as Gaussian, or Gauss or Laplace-Gauss distribution. The location `loc` specifies the mean or expectation. The `scale` specifies the standard deviation. 
 
-Without augument the function returns a standard normal distributed random variate N(0, 1.0).
+Without augument the function returns a standard normal distributed random variate `N(0, 1.0)`.
 
-With one augument, the function returns a normal distributed random variate N(loc, 1.0).
+With one augument, the function returns a normal distributed random variate `N(loc, 1.0)`.
 
-With two arguments, the function returns a normal distributed random variate N(loc, scale<sup>2</sup>), or an array of normal distributed random variates N(loc, 1.0).
+With two arguments, the function returns a normal distributed random variate `N(loc, scale<sup>2</sup>)`, or an array of normal distributed random variates `N(loc, 1.0)`.
 
-With three auguments, the function returns an array of normal distributed random variates N(loc, scale<sup>2</sup>).
+With three auguments, the function returns an array of normal distributed random variates `N(loc, scale<sup>2</sup>)`.
 
 For `complex` auguments, the real and imaginary parts are independent of each other.
 
@@ -108,7 +108,7 @@ Release
 
 The probability density function of the continuous normal distribution.
 
-f(x)=1 / (&sigma;&Sqrt;2&pi;) e<sup>-&half;((x-&mu;) / &sigma;)<sup>2</sup></sup>
+f(x) = 1 / (&sigma;&Sqrt;2&pi;) e<sup> - &half; ((x - &mu;) / &sigma;)<sup>2</sup></sup>
 
 ### Syntax
 
@@ -191,7 +191,7 @@ Release
 
 Cumulative distribution function of the normal continuous distribution
 
-F(X)=&half;&lbrack;1&plus;erf((x-&mu;) / &sigma;&Sqrt;2)&rbrack;
+F(X) = &half; &lbrack;1&plus;erf((x - &mu;) / &sigma; &Sqrt;2) &rbrack;
 
 ### Syntax
 

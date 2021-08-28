@@ -15,7 +15,7 @@ Release
 
 ### Description
 
-A geometric discrete random variate distribution G(p) is to model the number of failure before the first success. It is probability distribution supported on the set {0,1,2,3...}.
+A geometric discrete random variate distribution `G(p)` is to model the number of failure before the first success. It is probability distribution supported on the set {0,1,2,3...}.
 
 ### Syntax
 
@@ -73,7 +73,7 @@ Release
 
 The probability mass function of the discrete geometric distribution.
 
-f(x)= (1-p)<sup>k</sup>
+f(x) = (1 - p)<sup>k</sup>
 
 ### Syntax
 
@@ -138,7 +138,7 @@ Release
 
 The cumuative distribution function of the discrete geometric distribution.
 
-F(x)= 1 - (1-p)<sup>k+1</sup>
+F(x) = 1 - (1 - p)<sup>k+1</sup>
 
 ### Syntax
 

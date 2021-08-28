@@ -15,7 +15,7 @@ Release
 
 ### Description
 
-A binomial discrete random variate distribution B(n, p). It is used to characterize the number of successes in a sequence of n Bernoulli trials, each with the same probablity of p.
+A binomial discrete random variate distribution `B(n, p)`. It is used to characterize the number of successes in a sequence of n Bernoulli trials, each with the same probablity of `p`.
 
 For a single trial, binomial distribution is Bernoulli distribution.
 
@@ -146,7 +146,7 @@ Release
 
 The cumuative distribution function of the discrete binomial distribution.
 
-F(k) = &sum;<sup>k</sup> C(n, i) p<sup>i</sup>q<sup>n-i</sup>, k = 0, 1, 2, &hellip;, n
+F(k) = &sum;<sup>k</sup> C(n, i) p<sup>i</sup>q<sup>n - i</sup>, k = 0, 1, 2, &hellip;, n
 
 where C(n, i) is the binomial coefficient
 

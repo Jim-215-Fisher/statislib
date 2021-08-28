@@ -14,7 +14,7 @@ Release
 
 ### Description
 
-An hypergeometric distribution describes the probability of appearance of certain attributes (like success, color, shape, etc.) in k random draws, without replacement, from a finit populatin containing objects (size a) with that attributes and objects (size b) without such attributes. In contrast, binomial distribution describes k draws from n population with replacement.
+An hypergeometric distribution describes the probability of appearance of certain attributes (like success, color, shape, etc.) in `k` random draws, without replacement, from a finit populatin containing objects (size `a`) with that attributes and objects (size `b`) without such attributes. In contrast, binomial distribution describes `k` draws from n population with replacement.
 
 ### Syntax
 
@@ -86,7 +86,7 @@ Release
 
 The probability mass function of the hypergeometric distribution.
 
-f(x; k, a, b) = C(a, x) C(b, k-x) / C(a+b, k)
+f(x; k, a, b) = C(a, x) C(b, k - x) / C(a + b, k)
 
 where C is the binomial coefficient
 
@@ -161,7 +161,7 @@ Release
 
 The cumuative distribution function of the hypergeometric distribution.
 
-F(x; k, a, b) = &sum;<sup>x</sup>C(a, i) C(b, k-i) / C(a+b, k);  i = 0, 1, &hellip;, x
+F(x; k, a, b) = &sum;<sup>x</sup>C(a, i) C(b, k - i) / C(a + b, k);  i = 0, 1, &hellip;, x
 
 where C is the binomial coefficient
 

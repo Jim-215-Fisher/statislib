@@ -15,11 +15,11 @@ Release
 
 ### Description
 
-A poisson discrete random variate distribution Pois(lamda) is probability distribution of number of events with fixed mean rate (lamda) in a specified interval, such as time, distance, area or volume. The distribution is supported on the set {0,1,2,3...}.
+A poisson discrete random variate distribution `Pois(lambda)` is probability distribution of number of events with fixed mean rate `lambda` in a specified interval, such as time, distance, area or volume. The distribution is supported on the set {0,1,2,3...}.
 
 ### Syntax
 
-`result = [[statislib(module):poisson_distribution_rvs(interface)]](lamda, [array_size])`
+`result = [[statislib(module):poisson_distribution_rvs(interface)]](lamdba, [array_size])`
 
 ### Class
 
@@ -27,7 +27,7 @@ Elemental function
 
 ### Arguments
 
-`lamda`: has `intent in` and is a scalar of type `real`.
+`lambda`: has `intent in` and is a scalar of type `real`.
 
 `array_size`: optional argument has `intent in` and is a scalar of type `integer`.
 
@@ -61,7 +61,7 @@ program demo_poisson_rvs
 end program demo_poisson_rvs
 ```
 
-## `poisson_distribution_pmf` - Poisson probability mass function
+## `poisson_distribution_pmf` - poisson probability mass function
 
 ### Status
 
@@ -71,7 +71,7 @@ Release
 
 The probability mass function of the discrete poisson distribution.
 
-f(x)= &lamda;<sup>k</sup> e<sup>-&lamda;</sup> / k!
+f(x) = &lambda;<sup>k</sup> e<sup> - &lambda;</sup> / k!
 
 ### Syntax
 
@@ -85,7 +85,7 @@ Elemental function
 
 `k`: has `intent in` and is a scalar of type `integer`.
 
-`lamda`: has `intent in` and is a scalar of type `real`.
+`lambda`: has `intent in` and is a scalar of type `real`.
 
 ### Return value
 
@@ -123,7 +123,7 @@ program demo_pois_pmf
 end program demo_pois_pmf
 ```
 
-## `poisson_distribution_cdf` - Poisson cumulative distribution function
+## `poisson_distribution_cdf` - poisson cumulative distribution function
 
 ### Status
 
@@ -133,7 +133,7 @@ Release
 
 The cumuative distribution function of the discrete poisson distribution.
 
-F(x) = e<sup>&lamda;</sup> &sum;<sup>x</sup> &lamda;<sup>&iscr;</sup> / &iscr;!
+F(x) = e<sup>&lambda;</sup> &sum;<sup>x</sup> &lambda;<sup>i</sup> / i!
 
 ### Syntax
 
@@ -147,7 +147,7 @@ Elemental function
 
 `k`: has `intent in` and is a scalar or an array of type `integer`.
 
-`lamda`: has `intent in` and is a scalar of type `real`.
+`lambda`: has `intent in` and is a scalar of type `real`.
 
 ### Return value
 

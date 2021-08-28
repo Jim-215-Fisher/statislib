@@ -17,11 +17,11 @@ Release
 
 Gamma distribution is the maximum entropy probability distribution, and is frequently used to model waiting time.
 
-With one augument for shape parameter &alpha;, the function returns a standard gamma distributed random variate &Gamma;(&alpha;) with rate parameter &beta; = 1.0.
+With one augument for shape parameter `&alpha;`, the function returns a standard gamma distributed random variate `&Gamma;(&alpha;)` with rate parameter `&beta; = 1.0`.
 
-With two auguments, the function returns a scalar gamma distributed random variate &Gamma;(&alpha;, &beta;), or an array of  standard gamma distributed random variates &Gamma;(&alpha;) with rate parameter &beta; = 1.0. 
+With two auguments, the function returns a scalar gamma distributed random variate `&Gamma;(&alpha;, &beta;)`, or an array of  standard gamma distributed random variates `&Gamma;(&alpha;)` with rate parameter `&beta; = 1.0`. 
 
-With three auguments, the function returns an array of gamma distributed random variates &Gamma;(&alpha;, &beta;).
+With three auguments, the function returns an array of gamma distributed random variates `&Gamma;(&alpha;, &beta;)`.
 
 For `complex` auguments, the real and imaginary parts are independent of each other.
 
@@ -106,7 +106,7 @@ Release
 
 The probability density function of the continuous gamma distribution.
 
- f(x)= &beta;<sup>&alpha;</sup> / &Gamma;(&alpha;)  x<sup>&alpha;-1</sup>&middot; e<sup>-&beta;&middot;x</sup>
+ f(x) = &beta;<sup>&alpha;</sup> / &Gamma;(&alpha;)  x<sup>&alpha; - 1</sup> &middot; e<sup> - &beta; &middot; x</sup>
 
 ### Syntax
 
@@ -183,7 +183,7 @@ Release
 
 Cumulative distribution function of the gamma continuous distribution
 
-F(x)= &gamma;(&alpha;, &beta;&middot;x) / &Gamma;(&alpha;)
+F(x) = &gamma;(&alpha;, &beta; &middot;x) / &Gamma;(&alpha;)
 
 ### Syntax
 

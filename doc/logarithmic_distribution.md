@@ -71,7 +71,7 @@ program demo_logarithmic_rvs
 end program demo_logarithmic_rvs
 ```
 
-## `logarithmic_distribution_pmf` - Logarithmic probability mass function
+## `logarithmic_distribution_pmf` - logarithmic probability mass function
 
 ### Status
 
@@ -81,7 +81,7 @@ Release
 
 The probability mass function of the discrete logarithmic distribution.
 
-f(k)=- p<sup>k</sup> / [k&middot;ln(1-p)]
+f(k) = - p<sup>k</sup> / [k &middot; ln(1 - p)]
 
 ### Syntax
 
@@ -136,7 +136,7 @@ program demo_log_pmf
 end program demo_log_pmf
 ```
 
-## `logarithmic_distribution_cdf` - Logarithmic cumulative distribution function
+## `logarithmic_distribution_cdf` - logarithmic cumulative distribution function
 
 ### Status
 

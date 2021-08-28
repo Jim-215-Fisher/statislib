@@ -14,19 +14,19 @@ Release
 
 ### Description
 
-An exponentially distributed random variate distribution is the distribution of time between events in a Poisson point process. The inverse scale parameter `lamda` specifies the rate of change.
+An exponentially distributed random variate distribution is the distribution of time between events in a Poisson point process. The inverse scale parameter `&lambda;` specifies the rate of change.
 
-Without augument the function returns a standard exponential distributed random variate E(1.0).
+Without augument the function returns a standard exponential distributed random variate `E(1.0)`.
 
-With single argument, the function returns an exponential distributed random variate E(&lamda;).
+With single argument, the function returns an exponential distributed random variate `E(&lambda;)`.
 
-With double auguments the function returns a rank one array of random variates E(&lamda;).
+With double auguments the function returns a rank one array of random variates `E(&lambda;)`.
 
 For `complex` auguments, the real and imaginary parts are independent of each other.
 
 ### Syntax
 
-`result = [[statislib(module):exponential_distribution_rvs(interface)]]([lamda] [[, array_size]])`
+`result = [[statislib(module):exponential_distribution_rvs(interface)]]([lambda] [[, array_size]])`
 
 ### Class
 
@@ -34,7 +34,7 @@ Elemental function
 
 ### Arguments
 
-`lamda`: optional argument has `intent(in)` and is a scalar of type `real` or `complex`.
+`lambda`: optional argument has `intent(in)` and is a scalar of type `real` or `complex`.
 
 `array_size`: optional argument has `intent(in)` and is a scalar of type `integer`.
 
@@ -99,11 +99,11 @@ Release
 
 The probability density function of the continuous exponential distribution.
 
-f(x) = &lamda; e<sup>-&lamda;&middot;x</sup>
+f(x) = &lambda; e<sup>- &lambda;&middot;x</sup>
 
 ### Syntax
 
-`result = [[statislib(module):exponential_distribution_pdf(interface)]](x, lamda)`
+`result = [[statislib(module):exponential_distribution_pdf(interface)]](x, lambda)`
 
 ### Class
 
@@ -113,7 +113,7 @@ Elemental function
 
 `x`: has `intent(in)` and is a scalar of type `real` or `complex`.
 
-`lamda`: has `intent(in)` and is a scalar of type `real` or `complex`.
+`lambda`: has `intent(in)` and is a scalar of type `real` or `complex`.
 
 All arguments must have the same type.
 
@@ -175,12 +175,12 @@ Release
 
 Cumulative distribution function of the exponential continuous distribution
 
-F(x) = 1 - e<sup>-&lamda;&middot;x</sup>
+F(x) = 1 - e<sup>-&lambda;&middot;x</sup>
 
 
 ### Syntax
 
-`result = [[statislib(module):exponential_distribution_cdf(interface)]](x, lamda)`
+`result = [[statislib(module):exponential_distribution_cdf(interface)]](x, lambda)`
 
 ### Class
 
@@ -190,7 +190,7 @@ Elemental function
 
 `x`: has `intent(in)` and is a scalar of type `real` or `complex`.
 
-`lamda`: has `intent(in)` and is a scalar of type `real` or `complex`.
+`lambda`: has `intent(in)` and is a scalar of type `real` or `complex`.
 
 All arguments must have the same type.
 
