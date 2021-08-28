@@ -1,5 +1,5 @@
 ---
-title: statslib
+title: Statislib
 ---
 
 # Statistical Distribution -- Logarithmic Distribution
@@ -19,7 +19,7 @@ A logarithmic distribution, also known as logarithmic series distribution or sim
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_logarithmic(module):logarithmic_distribution_rvs(interface)]](p, [array_size])`
+`result = [[statislib(module):logarithmic_distribution_rvs(interface)]](p, [array_size])`
 
 ### Class
 
@@ -40,7 +40,7 @@ The result is a scalar or rank one array with a size of `array_size` of type `in
 ```fortran
 program demo_logarithmic_rvs
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_logarithmic, only: log_rvs => logarithmic_distribution_rvs
+    use statislib, only: log_rvs => logarithmic_distribution_rvs
 
     implicit none
     real :: p(3,4,5)
@@ -85,7 +85,7 @@ f(k)=- p<sup>k</sup> / [k&middot;ln(1-p)]
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_logarithmic(module):logarithmic_distribution_pmf(interface)]](k, p)`
+`result = [[statislib(module):logarithmic_distribution_pmf(interface)]](k, p)`
 
 ### Class
 
@@ -107,8 +107,8 @@ The result is a scalar or array of type `real` with array shape conformable to a
 ```fortran
 program demo_log_pmf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_logarithmic, only:   log_pmf => logarithmic_distribution_ pmf,&
-                                       log_rvs => logarithmic_distribution_rvs
+    use statislib, only:   log_pmf => logarithmic_distribution_pmf,&
+                           log_rvs => logarithmic_distribution_rvs
 
     implicit none
     real :: p(2,3,4)
@@ -152,7 +152,7 @@ where B is the incomplete beta fucntion
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_logarithmic(module):logarithmic_distribution_cdf(interface)]](k, p)`
+`result = [[statislib(module):logarithmic_distribution_cdf(interface)]](k, p)`
 
 ### Class
 
@@ -173,8 +173,8 @@ The result is a scalar or array of type `real` with array shape conformable to a
 ```fortran
 program demo_log_cdf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_logarithmic, only:   log_cdf => logarithmic_distribution_cdf, &
-                                       log_rvs => logarithmic_distribution_rvs
+    use statislib, only:   log_cdf => logarithmic_distribution_cdf, &
+                           log_rvs => logarithmic_distribution_rvs
 
     implicit none
     real :: p(2,3,4)

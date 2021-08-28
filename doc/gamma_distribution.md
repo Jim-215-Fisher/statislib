@@ -1,6 +1,6 @@
 ---
 
-title: statislib
+title: Statislib
 ---
 
 # Statistical Distribution -- Gamma Distribution
@@ -27,7 +27,7 @@ For `complex` auguments, the real and imaginary parts are independent of each ot
 
 ### Syntax
 
-`result = [[statislib_gamma(module):gamma_distribution_rvs(interface)]](alpha [[, beta]] [, array_size])`
+`result = [[statislib(module):gamma_distribution_rvs(interface)]](alpha [[, beta]] [, array_size])`
 
 ### Class
 
@@ -50,7 +50,7 @@ The result is a scalar or rank one array, with a size of `array_size`, of type `
 ```fortran
 program demo_gamma_rvs
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_gamma, only: rgamma => gamma_distribution_rvs
+    use statislib, only: rgamma => gamma_distribution_rvs
 
     implicit none
     real ::  g(2,3,4)
@@ -110,7 +110,7 @@ The probability density function of the continuous gamma distribution.
 
 ### Syntax
 
-`result = [[statislib_gamma(module):gamma_distribution_pdf(interface)]](x, alpha, beta)`
+`result = [[statislib(module):gamma_distribution_pdf(interface)]](x, alpha, beta)`
 
 ### Class
 
@@ -135,8 +135,8 @@ The result is a scalar of type `real`.
 ```fortran
 program demo_gamma_pdf
     use stdlib_stats_distribution_PRNG, onyl : random_seed
-    use statislib_gamma, only: rgamma => gamma_distribution_rvs,&
-                               gamma_pdf => gamma_distribution_pdf
+    use statislib, only: rgamma => gamma_distribution_rvs,&
+                         gamma_pdf => gamma_distribution_pdf
 
     implicit none
     real :: x(2,3,4),g(2,3,4),s(2,3,4)
@@ -187,7 +187,7 @@ F(x)= &gamma;(&alpha;, &beta;&middot;x) / &Gamma;(&alpha;)
 
 ### Syntax
 
-`result = [[statislib_gamma(module):gamma_distribution_cdf(interface)]](x, alpha, beta)`
+`result = [[statislib(module):gamma_distribution_cdf(interface)]](x, alpha, beta)`
 
 ### Class
 
@@ -212,8 +212,8 @@ The result is a scalar of type `real`.
 ```fortran
 program demo_gamma_cdf
     use stdlib_stats_distribution_PRNG, onyl : random_seed
-    use statislib_gamma, only: rgamma => gamma_distribution_rvs,               &
-                               gamma_cdf => gamma_distribution_cdf
+    use statislib, only: rgamma => gamma_distribution_rvs,               &
+                         gamma_cdf => gamma_distribution_cdf
 
     implicit none
     real :: x(2,3,4),g(2,3,4),s(2,3,4)

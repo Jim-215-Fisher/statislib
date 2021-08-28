@@ -1,5 +1,5 @@
 ---
-title: statislib
+title: Statislib
 ---
 
 # Statistical Distribution -- Uniform Distribution
@@ -18,7 +18,7 @@ Applying Fisher-Yates algorithm to generate an unbiased permutation for any list
 
 ### Syntax
 
-`result = [[statslib_uniform(module):shuffle(interface)]]( list )`
+`result = [[statislib(module):shuffle(interface)]]( list )`
 
 ### Class
 
@@ -37,7 +37,7 @@ Return a randomized rank one array of the input type.
 ```fortran
 program demo_shuffle
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_uniform, only : shuffle
+    use statislib, only : shuffle
     implicit none
     integer :: seed_put, seed_get, i
     real :: x(10)
@@ -89,7 +89,7 @@ For `complex` auguments, the real and imaginary parts are independent of each ot
 
 ### Syntax
 
-`result = [[statislib_uniform(module):uniform_distribution_rvs(interface)]]([[loc,] scale] [[[,array_size]]])`
+`result = [[statislib(module):uniform_distribution_rvs(interface)]]([[loc,] scale] [[[,array_size]]])`
 
 ### Class
 
@@ -114,7 +114,7 @@ The result is a scalar or a rank one array, with size of `array_size`, of type `
 ```fortran
 program demo_uniform_rvs
     use stdlib_stats_distribution_PRNG, only:random_seed
-    use statislib_uniform, only:uni=> uniform_distribution_rvs
+    use statislib, only:uni=> uniform_distribution_rvs
 
     implicit none
     complex :: loc, scale
@@ -211,7 +211,7 @@ f(x) = 1 / (real(scale) * image(scale));  for complex uniform distribution.
 
 ### Syntax
 
-`result = [[statislib_uniform(module):uniform_distribution_pdf(interface)]](x, loc, scale)`
+`result = [[statislib(module):uniform_distribution_pdf(interface)]](x, loc, scale)`
 
 ### Class
 
@@ -236,8 +236,8 @@ The result is a scalar or an array, with a shape conformable to auguments, of ty
 ```fortran
 program demo_uniform_pdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_uniform,  only : uni_pdf => uniform_distribution_pdf,         &
-                                   uni => uniform_distribution_rvs
+    use statislib,  only : uni_pdf => uniform_distribution_pdf,         &
+                           uni => uniform_distribution_rvs
 
     implicit none
     complex :: loc, scale
@@ -304,7 +304,7 @@ F(x) = (real(x) - real(loc))(image(x) - image(loc)) / (real(scale) * image(scale
 
 ### Syntax
 
-`result = [[statislib_uniform(module):uniform_distribution_cdf(interface)]](x, loc, scale)`
+`result = [[statislib(module):uniform_distribution_cdf(interface)]](x, loc, scale)`
 
 ### Class
 
@@ -329,8 +329,8 @@ The result is a scalar or an array, with a shape conformable to auguments, of ty
 ```fortran
 program demo_uniform_cdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_uniform, only : uni_cdf => uniform_distribution_cdf,          &
-                                  uni => uniform_distribution_rvs
+    use statislib, only : uni_cdf => uniform_distribution_cdf,          &
+                          uni => uniform_distribution_rvs
 
     implicit none
     real :: x(3,4,5), a(3,4,5), b(3,4,5)

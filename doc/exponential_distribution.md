@@ -1,5 +1,5 @@
 ---
-title: statislib
+title: Statislib
 ---
 
 # Statistical Distribution -- Exponential Distribution
@@ -26,7 +26,7 @@ For `complex` auguments, the real and imaginary parts are independent of each ot
 
 ### Syntax
 
-`result = [[statislib_exponential(module):exponential_distribution_rvs(interface)]]([lamda] [[, array_size]])`
+`result = [[statislib(module):exponential_distribution_rvs(interface)]]([lamda] [[, array_size]])`
 
 ### Class
 
@@ -47,7 +47,7 @@ The result is a scalar or rank one array, with a size of `array_size`, of type `
 ```fortran
 program demo_exponential_rvs
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_exponential, only : rexp => exponential_distribution_rvs
+    use statislib, only : rexp => exponential_distribution_rvs
 
     implicit none
     real ::  a(2,3,4)
@@ -103,7 +103,7 @@ f(x) = &lamda; e<sup>-&lamda;&middot;x</sup>
 
 ### Syntax
 
-`result = [[statislib_exponential(module):exponential_distribution_pdf(interface)]](x, lamda)`
+`result = [[statislib(module):exponential_distribution_pdf(interface)]](x, lamda)`
 
 ### Class
 
@@ -126,8 +126,8 @@ The result is a scalar of type `real`.
 ```fortran
 program demo_exponential_pdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_exponential, only: exp_pdf => exponential_distribution_pdf,  &
-                                     rexp => exponential_distribution_rvs
+    use statislib, only: exp_pdf => exponential_distribution_pdf,  &
+                         rexp => exponential_distribution_rvs
 
     implicit none
     real :: x(2,3,4),a(2,3,4)
@@ -180,7 +180,7 @@ F(x) = 1 - e<sup>-&lamda;&middot;x</sup>
 
 ### Syntax
 
-`result = [[statislib_exponential(module):exponential_distribution_cdf(interface)]](x, lamda)`
+`result = [[statislib(module):exponential_distribution_cdf(interface)]](x, lamda)`
 
 ### Class
 
@@ -203,8 +203,8 @@ The result is a scalar of type `real`.
 ```fortran
 program demo_exponential_cdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_exponential, only : exp_cdf => exponential_distribution_cdf,   &
-                                      rexp => exponential_distribution_rvs
+    use statislib, only : exp_cdf => exponential_distribution_cdf,   &
+                          rexp => exponential_distribution_rvs
 
     implicit none
     real :: x(2,3,4),a(2,3,4)

@@ -1,5 +1,5 @@
 ---
-title: statslib
+title: Statislib
 ---
 
 # Statistical Distribution -- Hypergeometric Distribution
@@ -18,7 +18,7 @@ An hypergeometric distribution describes the probability of appearance of certai
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_hypgeo(module):hypergeometric_distribution_rvs(interface)]](k, a, b, [array_size])`
+`result = [[statislib(module):hypergeometric_distribution_rvs(interface)]](k, a, b, [array_size])`
 
 ### Class
 
@@ -43,7 +43,7 @@ The result is a scalar or rank one array with a size of `array_size` of type `in
 ```fortran
 program demo_hypgeo_rvs
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_hypgeo, only: hpg_rvs => hypergeometric_distribution_rvs
+    use statislib, only: hpg_rvs => hypergeometric_distribution_rvs
 
     implicit none
     integer :: k(2,3,4), a(2,3,4), b(2,3,4)
@@ -92,7 +92,7 @@ where C is the binomial coefficient
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_hypgeo(module):hypergeometric_distribution_pmf(interface)]](x, k, a, b)`
+`result = [[statislib(module):hypergeometric_distribution_pmf(interface)]](x, k, a, b)`
 
 ### Class
 
@@ -119,8 +119,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_hypgeo_pmf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_hypgeo, only: hpg_pmf => hypergeometric_distribution_pmf, &
-                                hpg_rvs => hypergeometric_distribution_rvs
+    use statislib, only: hpg_pmf => hypergeometric_distribution_pmf, &
+                         hpg_rvs => hypergeometric_distribution_rvs
 
     implicit none
     integer :: k(2,3,4), a(2,3,4), b(2,3,4)
@@ -167,7 +167,7 @@ where C is the binomial coefficient
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_hypgeo(module):hypergeometric_distribution_cdf(interface)]](x, k, a, b)`
+`result = [[statislib(module):hypergeometric_distribution_cdf(interface)]](x, k, a, b)`
 
 ### Class
 
@@ -194,8 +194,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_hypgeo_cdf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_hypgeo, only: hpg_cdf => hypergeometric_distribution_cdf,     &
-                                hpg_rvs => hypergeometric_distribution_rvs
+    use statislib, only: hpg_cdf => hypergeometric_distribution_cdf,     &
+                         hpg_rvs => hypergeometric_distribution_rvs
 
     implicit none
     integer :: k(2,3,4), a(2,3,4), b(2,3,4)

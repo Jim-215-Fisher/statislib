@@ -1,5 +1,5 @@
 ---
-title: statislib
+title: Statislib
 ---
 
 # Statistical Distribution -- Normal Distribution
@@ -28,7 +28,7 @@ For `complex` auguments, the real and imaginary parts are independent of each ot
 
 ### Syntax
 
-`result = [[statislib_normal(module):normal_distribution_rvs(interface)]]([loc, [scale]] [, array_size])`
+`result = [[statislib(module):normal_distribution_rvs(interface)]]([loc, [scale]] [, array_size])`
 
 ## Class
 
@@ -53,7 +53,7 @@ The result is a scalar or rank one array, with a size of `array_size`, of type `
 ```fortran
 program demo_normal_rvs
     use stdlib_stats_distribution_PRNG, only: random_seed
-    use statislib_normal, only: norm => normal_distribution_rvs
+    use statislib, only: norm => normal_distribution_rvs
 
     implicit none
     real ::  a(2,3,4), b(2,3,4)
@@ -112,7 +112,7 @@ f(x)=1 / (&sigma;&Sqrt;2&pi;) e<sup>-&half;((x-&mu;) / &sigma;)<sup>2</sup></sup
 
 ### Syntax
 
-`result = [[statislib_normal(module):normal_distribution_pdf(interface)]](x, loc, scale)`
+`result = [[statislib(module):normal_distribution_pdf(interface)]](x, loc, scale)`
 
 ### Class
 
@@ -137,8 +137,8 @@ The result is a scalar of type `real`.
 ```fortran
 program demo_normal_pdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_normal, only : norm_pdf=>normal_distribution_pdf,             &
-                                 norm => normal_distribution_rvs
+    use statislib, only : norm_pdf=>normal_distribution_pdf,             &
+                          norm => normal_distribution_rvs
 
     implicit none
     real :: x(3,4,5),a(3,4,5),b(3,4,5)
@@ -195,7 +195,7 @@ F(X)=&half;&lbrack;1&plus;erf((x-&mu;) / &sigma;&Sqrt;2)&rbrack;
 
 ### Syntax
 
-`result = [[statislib_normal(module):normal_distribution_cdf(interface)]](x, loc, scale)`
+`result = [[statislib(module):normal_distribution_cdf(interface)]](x, loc, scale)`
 
 ### Class
 
@@ -220,8 +220,8 @@ The result is a scalar of type `real`.
 ```fortran
 program demo_norm_cdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_normal, only : norm_cdf => normal_distribution_cdf,           &
-                                 norm => normal_distribution_rvs
+    use statislib, only : norm_cdf => normal_distribution_cdf,           &
+                          norm => normal_distribution_rvs
 
     implicit none
     real :: x(2,3,4),a(2,3,4),b(2,3,4)

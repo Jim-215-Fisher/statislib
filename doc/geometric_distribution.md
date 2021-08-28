@@ -1,5 +1,5 @@
 ---
-title: statslib
+title: Statislib
 ---
 
 # Statistical Distribution -- Geometric Distribution
@@ -19,7 +19,7 @@ A geometric discrete random variate distribution G(p) is to model the number of 
 
 ### Syntax
 
-`result = [[statislib_geometric(module):geometric_distribution_rvs(interface)]](p, [array_size])`
+`result = [[statislib(module):geometric_distribution_rvs(interface)]](p, [array_size])`
 
 ### Class
 
@@ -40,7 +40,7 @@ The result is a scalar or rank one array with a size of `array_size` of type `in
 ```fortran
 program demo_geometric_rvs
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_geometric, only: geo => geometric_distribution_rvs
+    use statislib, only: geo => geometric_distribution_rvs
 
     implicit none
     real :: p(3,4,5), rv(10)
@@ -77,7 +77,7 @@ f(x)= (1-p)<sup>k</sup>
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_geometric(module):geometric_distribution_pmf(interface)]](k, p)`
+`result = [[statislib(module):geometric_distribution_pmf(interface)]](k, p)`
 
 ### Class
 
@@ -99,8 +99,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_geo_pmf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_geometric, only: geo_pmf => geometric_distribution_ pmf,&
-                                   geo => geometric_distribution_rvs
+    use statislib, only: geo_pmf => geometric_distribution_ pmf,&
+                         geo => geometric_distribution_rvs
 
     implicit none
     real :: p(2,3,4)
@@ -142,7 +142,7 @@ F(x)= 1 - (1-p)<sup>k+1</sup>
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_geometric(module):geometric_distribution_cdf(interface)]](k, p)`
+`result = [[statislib(module):geometric_distribution_cdf(interface)]](k, p)`
 
 ### Class
 
@@ -163,8 +163,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_geo_cdf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_geometric, only: geo_cdf => geometric_distribution_cdf, &
-                                   geo => geometric_distribution_rvs
+    use statislib, only: geo_cdf => geometric_distribution_cdf, &
+                         geo => geometric_distribution_rvs
 
     implicit none
     real :: p(2,3,4)

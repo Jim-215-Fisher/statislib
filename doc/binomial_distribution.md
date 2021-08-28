@@ -1,5 +1,5 @@
 ---
-title: statslib
+title: Statislib
 ---
 
 # Statistical Distribution -- Binomial Distribution
@@ -21,7 +21,7 @@ For a single trial, binomial distribution is Bernoulli distribution.
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_binomial(module):binomial_distribution_rvs(interface)]](n, p, [array_size])`
+`result = [[statislib(module):binomial_distribution_rvs(interface)]](n, p, [array_size])`
 
 ### Class
 
@@ -44,7 +44,7 @@ The result is a scalar or rank one array with a size of `array_size` of type `in
 ```fortran
 program demo_binomial_rvs
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_binomial, only: rbinom => binomial_distribution_rvs
+    use statislib, only: rbinom => binomial_distribution_rvs
 
     implicit none
     integer :: n(2,3,4)
@@ -83,7 +83,7 @@ where C(n, k) is the binomial coefficent
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_binomial(module):binomial_distribution_pmf(interface)]](k, n, p)`
+`result = [[statislib(module):binomial_distribution_pmf(interface)]](k, n, p)`
 
 ### Class
 
@@ -108,9 +108,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_binom_pmf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_binomial, only:                               &
-	                                     binom_pmf => binomial_distribution_pmf,&
-                                         rbinom => binomial_distribution_rvs
+    use statislib, only:  binom_pmf => binomial_distribution_pmf,&
+                          rbinom => binomial_distribution_rvs
     implicit none
     real :: p(2,3,4)
     integer :: n(2,3,4), m(2,3,4)
@@ -153,7 +152,7 @@ where C(n, i) is the binomial coefficient
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_binomial(module):binomial_distribution_cdf(interface)]](k, n, p)`
+`result = [[statislib(module):binomial_distribution_cdf(interface)]](k, n, p)`
 
 ### Class
 
@@ -178,9 +177,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_binom_cdf
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_binomial, only:                               &
-	                                     binom_cdf => binomial_distribution_cdf,&
-	                                     rbinom => binomial_distribution_rvs
+    use statislib, only : binom_cdf => binomial_distribution_cdf,&
+	                      rbinom => binomial_distribution_rvs
     implicit none
     real :: p(2,3,4,5)
     integer :: n(2,3,4), m(2,3,4)

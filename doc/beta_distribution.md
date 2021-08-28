@@ -1,6 +1,6 @@
 ---
 
-title: statislib
+title: Statislib
 ---
 
 # Statistical Distribution -- Beta Distribution
@@ -25,7 +25,7 @@ For `complex` auguments, the real and imaginary parts are independent of each ot
 
 ### Syntax
 
-`result = [[statislib_beta(module):beta_distribution_rvs(interface)]](alpha, beta [, array_size])`
+`result = [[statislib(module):beta_distribution_rvs(interface)]](alpha, beta [, array_size])`
 
 ### Class
 
@@ -48,7 +48,7 @@ The result is a scalar or rank one array, with a size of `array_size`, of type `
 ```fortran
 program demo_beta_rvs
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_beta, only: rbeta => beta_distribution_rvs
+    use statislib, only: rbeta => beta_distribution_rvs
 
     implicit none
     real ::  aa(2,3,4), bb(2,3,4)
@@ -112,7 +112,7 @@ x is supported in [0, 1]
 
 ### Syntax
 
-`result = [[statislib_beta(module):beta_distribution_pdf(interface)]](x, alpha, beta)`
+`result = [[statislib(module):beta_distribution_pdf(interface)]](x, alpha, beta)`
 
 ### Class
 
@@ -137,8 +137,8 @@ The result is a scalar or an array, with a shape conformable to auguments, of ty
 ```fortran
 program demo_beta_pdf
     use stdlib_stats_distribution_PRNG, onyl : random_seed
-    use statislib_beta, only: rbeta => beta_distribution_rvs,&
-                              beta_pdf => beta_distribution_pdf
+    use statislib, only: rbeta => beta_distribution_rvs,&
+                         beta_pdf => beta_distribution_pdf
 
     implicit none
     real :: x(2,3,4),aa(2,3,4),bb(2,3,4)
@@ -192,7 +192,7 @@ x is supported in [0, 1]
 
 ### Syntax
 
-`result = [[statislib_beta(module):beta_distribution_cdf(interface)]](x, alpha, beta)`
+`result = [[statislib(module):beta_distribution_cdf(interface)]](x, alpha, beta)`
 
 ### Class
 
@@ -217,8 +217,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_beta_cdf
     use stdlib_stats_distribution_PRNG, onyl : random_seed
-    use statislib_beta, only: rbeta => beta_distribution_rvs,&
-                              beta_cdf => beta_distribution_cdf
+    use statislib, only: rbeta => beta_distribution_rvs,&
+                         beta_cdf => beta_distribution_cdf
 
     implicit none
     real :: x(2,3,4),aa(2,3,4),bb(2,3,4)

@@ -1,5 +1,5 @@
 ---
-title: statslib
+title: Statislib
 ---
 
 # Statistical Distribution - Negative Binomial Distribution
@@ -18,7 +18,7 @@ A negative binomial discrete random variate distribution NB(n, p), also known as
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_negbinomial(module):negbinomial_distribution_rvs(interface)]](n, p, [array_size])`
+`result = [[statislib(module):negbinomial_distribution_rvs(interface)]](n, p, [array_size])`
 
 ### Class
 
@@ -41,7 +41,7 @@ The result is a scalar or rank one array with a size of `array_size` of type `in
 ```fortran
 program demo_nb_rvs
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_negbinomial, only: nb_rvs => nb_distribution_rvs
+    use statislib, only: nb_rvs => negbinomial_distribution_rvs
 
     implicit none
     integer :: n(2,3,4)
@@ -64,7 +64,7 @@ program demo_nb_rvs
 end program demo_nb_rvs
 ```
 
-## `nb_distribution_pmf` - Negative binomial probability mass function
+## `negbinomial_distribution_pmf` - Negative binomial probability mass function
 
 ### Status
 
@@ -80,7 +80,7 @@ where C is the binomial coefficient
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_negbinomial(module):nb_distribution_pmf(interface)]](k, n, p)`
+`result = [[statislib(module):negbinomial_distribution_pmf(interface)]](k, n, p)`
 
 ### Class
 
@@ -105,8 +105,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_nb_pmf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_negbinomial, only:     nb_pmf => nb_distribution_pmf,         &
-                                         nb_rvs => nb_distribution_rvs
+    use statislib, only: nb_pmf => negbinomial_distribution_pmf,         &
+                         nb_rvs => negbinomial_distribution_rvs
 
     implicit none
     real :: p(2,3,4)
@@ -130,7 +130,7 @@ program demo_nb_pmf
 end program demo_nb_pmf
 ```
 
-## `nb_distribution_cdf` - Negative binomial cumulative distribution function
+## `negbinomial_distribution_cdf` - Negative binomial cumulative distribution function
 
 ### Status
 
@@ -146,7 +146,7 @@ where B is the regularized incomplet beta function$$
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_negbinomial(module):nb_distribution_cdf(interface)]](k, n, p)`
+`result = [[statislib(module):negbinomial_distribution_cdf(interface)]](k, n, p)`
 
 ### Class
 
@@ -171,8 +171,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_nb_cdf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_negbinomial, only:     nb_cdf => nb_distribution_cdf,         &
-                                         nb_rvs => nb_distribution_rvs
+    use statislib, only: nb_cdf => negbinomial_distribution_cdf,         &
+                         nb_rvs => negbinomial_distribution_rvs
 
     implicit none
     real :: p(2,3,4)

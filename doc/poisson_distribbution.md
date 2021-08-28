@@ -1,5 +1,5 @@
 ---
-title: statislib
+title: Statislib
 ---
 
 # Statistical Distribution -- Poisson Distribution
@@ -19,7 +19,7 @@ A poisson discrete random variate distribution Pois(lamda) is probability distri
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_poisson(module):poisson_distribution_rvs(interface)]](lamda, [array_size])`
+`result = [[statislib(module):poisson_distribution_rvs(interface)]](lamda, [array_size])`
 
 ### Class
 
@@ -40,7 +40,7 @@ The result is a scalar or rank one array with a size of `array_size` of type `in
 ```fortran
 program demo_poisson_rvs
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_poisson, only: rpois => poisson_distribution_rvs
+    use statislib, only: rpois => poisson_distribution_rvs
 
     implicit none
     real :: p(2,3,4)
@@ -75,7 +75,7 @@ f(x)= &lamda;<sup>k</sup> e<sup>-&lamda;</sup> / k!
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_poisson(module):poisson_distribution_pmf(interface)]](k, lamda)`
+`result = [[statislib(module):poisson_distribution_pmf(interface)]](k, lamda)`
 
 ### Class
 
@@ -96,8 +96,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_pois_pmf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_poisson, only:         pois_pmf => poisson_distribution_pmf,  &
-                                         pois_rvs => poisson_distribution_rvs
+    use statislib, only:         pois_pmf => poisson_distribution_pmf,  &
+                                 pois_rvs => poisson_distribution_rvs
 
     implicit none
     real :: p(2,3,4)
@@ -137,7 +137,7 @@ F(x) = e<sup>&lamda;</sup> &sum;<sup>x</sup> &lamda;<sup>&iscr;</sup> / &iscr;!
 
 ### Syntax
 
-`result = [[stdlib_stats_distribution_poisson(module):poisson_distribution_cdf(interface)]](k, lamda)`
+`result = [[statislib(module):poisson_distribution_cdf(interface)]](k, lamda)`
 
 ### Class
 
@@ -158,8 +158,8 @@ The result is a scalar of type `real` with a shape conformable to auguments.
 ```fortran
 program demo_pois_cdf
     use stdlib_stats_distribution_PRNG, only : rand_seed
-    use statislib_poisson, only:         pois_cdf => poisson_distribution_cdf, &
-                                         pois_rvs => poisson_distribution_rvs
+    use statislib, only:         pois_cdf => poisson_distribution_cdf, &
+                                 pois_rvs => poisson_distribution_rvs
     implicit none
     real :: p(2,3,4)
     integer :: put, get
