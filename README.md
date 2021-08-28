@@ -24,7 +24,7 @@ cmake --build build
 Your compiled statislib will be in `statislib/build/src` as `libstatislib.a`, and you can copy the library to the selected place. To test, run each test file under `tests/` directory.
 
 ### Usage
-In your program, access the library throught `use` statement. You can use local name as short hand for library procedures or functions as follows:
+In your program, access the library through `use` statement. You can use local name as short hand for library procedures or functions as follows:
 
 ``` fortran
 program test
