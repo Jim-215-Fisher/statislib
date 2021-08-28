@@ -6,7 +6,7 @@ title: Statislib
 
 [TOC]
 
-## `hypergeometric_distribution_rvs` - Hypergeometric distribution random variates
+## `hypergeometric_distribution_rvs` - hypergeometric distribution random variates
 
 ### Status
 
@@ -76,7 +76,7 @@ program demo_hypgeo_rvs
 end program demo_hypgeo_rvs
 ```
 
-## `hypergeometric_distribution_pmf` - Hypergeometric probability mass function
+## `hypergeometric_distribution_pmf` - hypergeometric probability mass function
 
 ### Status
 
@@ -151,7 +151,7 @@ program demo_hypgeo_pmf
 end program demo_hypgeo_pmf
 ```
 
-## `hypergeometric_distribution_cdf` - Hypergeometric cumulative distribution function
+## `hypergeometric_distribution_cdf` - hypergeometric cumulative distribution function
 
 ### Status
 

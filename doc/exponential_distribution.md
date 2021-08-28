@@ -14,13 +14,13 @@ Release
 
 ### Description
 
-An exponentially distributed random variate distribution is the distribution of time between events in a Poisson point process. The inverse scale parameter `&lambda;` specifies the rate of change.
+An exponentially distributed random variate distribution is the distribution of time between events in a Poisson point process. The inverse scale parameter &lambda; specifies the rate of change.
 
-Without augument the function returns a standard exponential distributed random variate `E(1.0)`.
+Without augument the function returns a standard exponential distributed random variate E(1.0).
 
-With single argument, the function returns an exponential distributed random variate `E(&lambda;)`.
+With single argument, the function returns an exponential distributed random variate E(&lambda;).
 
-With double auguments the function returns a rank one array of random variates `E(&lambda;)`.
+With double auguments the function returns a rank one array of random variates E(&lambda;).
 
 For `complex` auguments, the real and imaginary parts are independent of each other.
 

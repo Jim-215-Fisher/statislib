@@ -17,9 +17,9 @@ Release
 
 Beta distribution is used to model random variables in a finit range, also known as the beta distribution of the first kind.
 
-With two auguments for shape parameters `&alpha; > 0`, `&beta; > 0`, the function returns a beta distributed random variate `Beta(&alpha;,&beta;)`.
+With two auguments for shape parameters &alpha; > 0, &beta; > 0, the function returns a beta distributed random variate Beta(&alpha;,&beta;).
 
-With three auguments, the function returns a rank one array of beta distributed random variate `Beta(&alpha;, &beta;)`.
+With three auguments, the function returns a rank one array of beta distributed random variate Beta(&alpha;, &beta;).
 
 For `complex` auguments, the real and imaginary parts are independent of each other.
 
@@ -185,7 +185,7 @@ Release
 Cumulative distribution function of the beta continuous distribution
 
 F(x) = B(x; &alpha;, &beta;) / B(&alpha;, &beta;) 
- dw
+
 where B(x; &alpha;, &beta;) = &int;<sup>x</sup> t<sup>&alpha;-1</sup>(1 - t)<sup>&beta;-1</sup> dt
 
 x is supported in [0, 1]

@@ -63,7 +63,7 @@ program demo_geometric_rvs
 end program demo_geometric_rvs
 ```
 
-## `geometric_distribution_pmf` - Geometric probability mass function
+## `geometric_distribution_pmf` - geometric probability mass function
 
 ### Status
 
@@ -128,7 +128,7 @@ program demo_geo_pmf
 end program demo_geo_pmf
 ```
 
-## `geometric_distribution_cdf` - Geometric cumulative distribution function
+## `geometric_distribution_cdf` - geometric cumulative distribution function
 
 ### Status
 
@@ -138,7 +138,7 @@ Release
 
 The cumuative distribution function of the discrete geometric distribution.
 
-F(x) = 1 - (1 - p)<sup>k+1</sup>
+F(x) = 1 - (1 - p)<sup>k + 1</sup>
 
 ### Syntax
 

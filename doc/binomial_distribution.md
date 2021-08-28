@@ -77,7 +77,7 @@ Release
 
 The probability mass function of the discrete binomial distribution.
 
-p(k) = C(n, k) p<sup>k</sup>q<sup>n-k</sup>, k = 0, 1, 2, &hellip;, n
+p(k) = C(n, k) p<sup>k</sup> q<sup>n-k</sup>, k = 0, 1, 2, &hellip;, n
 
 where C(n, k) is the binomial coefficent
 
@@ -146,7 +146,7 @@ Release
 
 The cumuative distribution function of the discrete binomial distribution.
 
-F(k) = &sum;<sup>k</sup> C(n, i) p<sup>i</sup>q<sup>n - i</sup>, k = 0, 1, 2, &hellip;, n
+F(k) = &sum;<sup>k</sup> C(n, i) p<sup>i</sup> q<sup>n - i</sup>, k = 0, 1, 2, &hellip;, n
 
 where C(n, i) is the binomial coefficient
 

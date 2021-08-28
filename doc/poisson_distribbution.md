@@ -15,7 +15,7 @@ Release
 
 ### Description
 
-A poisson discrete random variate distribution `Pois(lambda)` is probability distribution of number of events with fixed mean rate `lambda` in a specified interval, such as time, distance, area or volume. The distribution is supported on the set {0,1,2,3...}.
+A poisson discrete random variate distribution Pois(&lambda;) is probability distribution of number of events with fixed mean rate &lambda; in a specified interval, such as time, distance, area or volume. The distribution is supported on the set {0,1,2,3...}.
 
 ### Syntax
 
