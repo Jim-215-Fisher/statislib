@@ -22,13 +22,20 @@ endfunction()
 
 
 macro(ADDTEST name)
+    set(libs ${PROJECT_NAME} fortran_stdlib::fortran_stdlib)
     add_executable(test_${name} test_${name}.f90)
-    target_link_libraries(test_${name} ${PROJECT_NAME})
+    target_link_libraries(test_${name} ${libs})
+    target_include_directories(test_${name}
+        PUBLIC
+        ../src/mod_files/
+    )
     add_test(NAME ${name}
              COMMAND $<TARGET_FILE:test_${name}> ${CMAKE_CURRENT_BINARY_DIR}
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endmacro(ADDTEST)
 
+
+enable_testing(  )
 
 
 # --- compiler options
@@ -41,7 +48,7 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
   add_compile_options(-Wall)
   add_compile_options(-Wextra)
   add_compile_options(-Wimplicit-procedure)
-  add_compile_options(-O3)
+#  add_compile_options(-O3)
 endif()
 
 
@@ -50,6 +57,10 @@ find_program(FYPP fypp)
 if(NOT FYPP)
   message(FATAL_ERROR "Preprocessor fypp not found!")
 endif()
+
+# --- find fortran stdlib
+find_package(fortran_stdlib REQUIRED)
+
 
 add_subdirectory(src)
 add_subdirectory(tests)

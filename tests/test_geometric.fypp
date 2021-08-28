@@ -1,4 +1,4 @@
-##:include "common.fypp"
+#:include "common.fypp"
 program test_distribution_geometric
     use stdlib_kinds
     use stdlib_error, only : check
@@ -147,4 +147,4 @@ contains
 
   #:endfor
 
-end program statislib_distribtuion_geometric
+end program test_distribution_geometric

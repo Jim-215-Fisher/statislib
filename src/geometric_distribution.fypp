@@ -1,5 +1,5 @@
 #:include "common.fypp"
-module statislib_distribution_geometric
+module statislib_geometric
     use stdlib_kinds
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni=>uniform_distribution_rvs
@@ -135,4 +135,4 @@ contains
 
     #:endfor
 
-end module statislib_distribution_geometric
+end module statislib_geometric

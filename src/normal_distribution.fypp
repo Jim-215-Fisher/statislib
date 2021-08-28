@@ -176,9 +176,12 @@ contains
         ${t1}$, intent(in), optional :: scale
         ${t1}$ :: res
 
-        if(present(scale) .and. scale == 0._${k1}$) call error_stop("Error"    &
-            //"(norm_dist_rvs): Normal distribution scale parameter must be "  &
-            //"non-zero")
+        if(.not. present(scale)) then
+        elseif(scale == 0._${k1}$) then
+            call error_stop("Error(norm_dist_rvs): Normal distribution scale"  &
+            //"parameter must be non-zero")
+        end if
+
         res = norm_dist_rvs_0_${t1[0]}$${k1}$(  )
         if(present(scale)) res = res * scale
         res = res + loc
@@ -223,9 +226,12 @@ contains
         ${t1}$ ::  x, y, re
         integer :: hz, iz, i
 
-        if(present(scale) .and. scale == 0._${k1}$) call error_stop("Error("   &
-            //"norm_dist_rvs_array): Normal distribution scale parameter must "&
-            //"be non-zero")
+        if(.not. present(scale)) then
+        elseif(scale == 0._${k1}$) then
+            call error_stop("Error(norm_dist_rvs_array): Normal distribution " &
+            //"scale parameter must be non-zero")
+        end if
+
         if( .not. zig_norm_initialized ) call zigset
         do i = 1, array_size
             iz = 0

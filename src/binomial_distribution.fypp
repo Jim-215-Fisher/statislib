@@ -102,6 +102,7 @@ contains
                 fm = (n0 + 1) * p0
                 npq = n0 * p0 * q0
                 m = fm; mrang = 6 * sqrt(npq)
+                if(allocated(pb)) deallocate(pb, pc, pbl, pcl)
                 allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
                 allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),          &
                          source = .false.)
@@ -126,7 +127,7 @@ contains
                 fm = (n0 + 1) * p0
                 npq = n0 * p0 * q0
                 m = fm; mrang = 6 * sqrt(npq)
-                deallocate(pb, pc, pbl, pcl)
+                if(allocated(pb)) deallocate(pb, pc, pbl, pcl)
                 allocate(pb(-mrang : mrang), pc(3, -mrang : mrang), source = 0.0)
                 allocate(pbl(-mrang : mrang), pcl(3, -mrang : mrang),          &
                          source = .false.)

@@ -86,6 +86,24 @@ module statislib_special
 
 
 
+    interface gpx
+    ! Evaluation of incomplete gamma function
+    !
+        #:for k1, t1 in REAL_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+        module procedure gpx_${t1[0]}$${k1}$${k2}$   !for real s and x
+          #:endfor
+        #:endfor
+
+        #:for k1, t1 in INT_KINDS_TYPES
+          #:for k2, t2 in REAL_KINDS_TYPES
+        module procedure gpx_${t1[0]}$${k1}$${k2}$   !for integer s and real x
+          #:endfor
+        #:endfor
+    end interface gpx
+
+
+
     interface lower_incomplete_gamma
     ! Lower incomplete gamma function
     !
@@ -154,22 +172,6 @@ module statislib_special
           #:endfor
         #:endfor
     end interface regularized_gamma_q
-
-
-
-    interface gpx
-    ! Evaluation of incomplete gamma function
-    !
-        #:for k1, t1 in REAL_KINDS_TYPES
-        module procedure gpx_${t1[0]}$${k1}$
-        #:endfor
-
-        #:for k1, t1 in INT_KINDS_TYPES
-          #:for k2, t2 in REAL_KINDS_TYPES
-        module procedure gpx_${t1[0]}$${k1}$${k2}$
-          #:endfor
-        #:endfor
-    end interface gpx
 
 
 
@@ -365,14 +367,16 @@ contains
 
 
     #:for k1, t1 in REAL_KINDS_TYPES
-      #:if k1 == "sp"
-        ! single precision use double variables
-        #:set k2 = "dp"
-      #:else
-        ! double/quadruple precision use quadruple variables
-        #:set k2 = "qp"
-      #:endif
-    impure elemental function gpx_${t1[0]}$${k1}$(s, x) result(res)
+      #:for k2, t2 in REAL_KINDS_TYPES
+        @:comp(k1, t1, k2, t2)
+        #:if res_kind == "sp"
+        #! single precision use double variables
+          #:set k3 = "dp"
+        #:else
+          #! double/quadruple precision use quadruple variables
+          #:set k3 = "qp"
+        #:endif
+    impure elemental function gpx_${t1[0]}$${k1}$${k2}$(s, x) result(res)
     !
     ! Approximation of incomplete gamma G function with real arguments s.
     !
@@ -382,33 +386,34 @@ contains
     !
     ! Fortran 90 program by Jim-215-Fisher
     !
-        ${t1}$, intent(in) :: x, s
-        real(${k1}$) :: res
-        ${t1}$ :: p_lim
-        real(${k2}$) :: a, b, g, c, d, y, dm
+        ${t1}$, intent(in) :: s
+        ${t2}$, intent(in) :: x
+        ${res_type}$ :: res
+        ${t2}$ :: p_lim
+        real(${k3}$) :: a, b, g, c, d, y, dm
         integer :: n
 
-        #:if k2 == "dp"
+        #:if k3 == "dp"
         dm = dmd
         #:else
         dm = dmq
         #:endif
-        if(x < -9.0_${k1}$) then
-            p_lim = 5.0_${k1}$ * (sqrt(abs(x)) - 1.0_${k1}$)
-        elseif(x >= -9.0_${k1}$ .and. x <= 0.0_${k1}$) then
-            p_lim = 0.0_${k1}$
+        if(x < -9.0_${k2}$) then
+            p_lim = 5.0_${k1}$ * (sqrt(abs(x)) - 1.0_${k2}$)
+        elseif(x >= -9.0_${k2}$ .and. x <= 0.0_${k2}$) then
+            p_lim = 0.0_${k2}$
         else
             p_lim = x
         endif
-        if(x < 0._${k1}$) then
+        if(x < 0._${k2}$) then
             call error_stop("Error(gpx): Incomplete gamma function with"       &
                 //" negative x must come with integer of s")
-        elseif(s >= p_lim) then
-            a = 1.0_${k2}$
+        elseif(real(s, ${res_kind}$) >= real(p_lim, ${res_kind}$)) then
+            a = 1.0_${k3}$
             b = s
             g = a / b
             c = a / dm
-            d = 1.0_${k2}$ / b
+            d = 1.0_${k3}$ / b
             n = 2
             do
                 if(mod(n, 2) == 0) then
@@ -418,39 +423,40 @@ contains
                 end if
                 b = s - 1 + n
                 d =  d * a + b
-                if(d == 0.0_${k2}$) d = dm
+                if(d == 0.0_${k3}$) d = dm
                 c = b + a / c
-                if(c == 0.0_${k2}$) c = dm
-                d = 1.0_${k2}$ / d
+                if(c == 0.0_${k3}$) c = dm
+                d = 1.0_${k3}$ / d
                 y = c * d
                 g = g * y
                 n = n + 1
-                if(abs(y - 1.0_${k2}$) < tol_${k2}$) exit
+                if(abs(y - 1.0_${k3}$) < tol_${k3}$) exit
             end do
         else
-            a = 1.0_${k2}$
+            a = 1.0_${k3}$
             b = x + 1 - s
             g = a / b
             c = a / dm
-            d = 1.0_${k2}$ / b
+            d = 1.0_${k3}$ / b
             n = 2
             do
                 a = -(n - 1) * (n - 1 - s)
-                b = b + 2.0_${k2}$
+                b = b + 2.0_${k3}$
                 d = d * a + b
-                if(d == 0.0_${k2}$) d = dm
+                if(d == 0.0_${k3}$) d = dm
                 c = b + a / c
-                if(c == 0.0_${k2}$) c = dm
-                d = 1.0_${k2}$ / d
+                if(c == 0.0_${k3}$) c = dm
+                d = 1.0_${k3}$ / d
                 y = c * d
                 g = g * y
                 n = n + 1
-                if(abs(y - 1.0_${k2}$) < tol_${k2}$) exit
+                if(abs(y - 1.0_${k3}$) < tol_${k3}$) exit
             end do
         endif
         res = g
-    end function gpx_${t1[0]}$${k1}$
+    end function gpx_${t1[0]}$${k1}$${k2}$
 
+      #:endfor
     #:endfor
 
 
@@ -458,10 +464,10 @@ contains
     #:for k1, t1 in INT_KINDS_TYPES
       #:for k2, t2 in REAL_KINDS_TYPES
         #:if k2 == "sp"
-          ! single precision use double variables
+          #! single precision use double variables
           #:set k3 = "dp"
         #:else
-          ! double/quadruple precision use quadruple variables
+          #! double/quadruple precision use quadruple variables
           #:set k3 = "qp"
         #:endif
     impure elemental function gpx_${t1[0]}$${k1}$${k2}$(s, x) result(res)
@@ -567,10 +573,10 @@ contains
       #:for k2, t2 in REAL_KINDS_TYPES
         @:comp(k1, t1, k2, t2)
         #:if res_kind == "sp"
-          ! single precision use double variables
+          #! single precision use double variables
           #:set k3 = "dp"
         #:else
-          ! double/quadruple precision use quadruple variables
+          #! double/quadruple precision use quadruple variables
           #:set k3 = "qp"
        #:endif
     impure elemental function ingamma_low_${t1[0]}$${k1}$${k2}$(s, x)          &
@@ -615,10 +621,10 @@ contains
       #:for k2, t2 in REAL_KINDS_TYPES
         @:comp(k1, t1, k2, t2)
           #:if res_kind == "sp"
-            ! single precision use double variables
+            #! single precision use double variables
             #:set k3 = "dp"
           #:else
-            ! double/quadruple precision use quadruple variables
+            #! double/quadruple precision use quadruple variables
             #:set k3 = "qp"
           #:endif
     impure elemental function l_ingamma_low_${t1[0]}$${k1}$${k2}$(s, x)        &
@@ -661,10 +667,10 @@ contains
       #:for k2, t2 in REAL_KINDS_TYPES
         @:comp(k1, t1, k2, t2)
           #:if res_kind == "sp"
-            ! single precision use double variables
+            #! single precision use double variables
             #:set k3 = "dp"
           #:else
-            ! double/quadruple precision use quadruple variables
+            #! double/quadruple precision use quadruple variables
             #:set k3 = "qp"
           #:endif
     impure elemental function ingamma_up_${t1[0]}$${k1}$${k2}$(s, x)           &
@@ -712,10 +718,10 @@ contains
       #:for k2, t2 in REAL_KINDS_TYPES
         @:comp(k1, t1, k2, t2)
           #:if res_kind == "sp"
-            ! single precision use double variables
+            #! single precision use double variables
             #:set k3 = "dp"
           #:else
-            ! double/quadruple precision use quadruple variables
+            #! double/quadruple precision use quadruple variables
             #:set k3 = "qp"
           #:endif
     impure elemental function l_ingamma_up_${t1[0]}$${k1}$${k2}$(s, x)         &
@@ -723,7 +729,7 @@ contains
 
         ${t1}$, intent(in) :: s
         ${t2}$, intent(in) :: x
-        ${res_type$ :: res
+        ${res_type}$ :: res
         real(${k3}$) :: s1, y, xx, ss
 
         #:if t1[0] == "i"
@@ -756,10 +762,10 @@ contains
       #:for k2, t2 in REAL_KINDS_TYPES
         @:comp(k1, t1, k2, t2)
           #:if res_kind == "sp"
-            ! single precision use double variables
+            #! single precision use double variables
             #:set k3 = "dp"
           #:else
-            ! double/quadruple precision use quadruple variables
+            #! double/quadruple precision use quadruple variables
             #:set k3 = "qp"
           #:endif
     impure elemental function regamma_p_${t1[0]}$${k1}$${k2}$(s, x) result(res)
@@ -801,10 +807,10 @@ contains
       #:for k2, t2 in REAL_KINDS_TYPES
         @:comp(k1, t1, k2, t2)
           #:if res_kind == "sp"
-            ! single precision use double variables
+            #! single precision use double variables
             #:set k3 = "dp"
           #:else
-            ! double/quadruple precision use quadruple variables
+            #! double/quadruple precision use quadruple variables
             #:set k3 = "qp"
           #:endif
     impure elemental function regamma_q_${t1[0]}$${k1}$${k2}$(s, x) result(res)
@@ -890,10 +896,10 @@ contains
 
     #:for k1, t1 in REAL_KINDS_TYPES
       #:if k1 == "sp"
-        ! single precision use double variables
+        #! single precision use double variables
         #:set k2 = "dp"
       #:else
-        ! double/quadruple precision use quadruple variables
+        #! double/quadruple precision use quadruple variables
         #:set k2 = "qp"
       #:endif
     impure elemental function inbeta_${t1[0]}$${k1}$(x, a, b) result(res)

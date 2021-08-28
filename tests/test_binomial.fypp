@@ -40,7 +40,7 @@ contains
     subroutine test_binomial_random_generator
 
         integer, parameter :: num = 10000000
-        integer, parameter :: arry_size = 1000
+        integer, parameter :: array_size = 1000
         integer :: i, j, freq(0:array_size - 1), n
         real(dp) :: chisq, expct
         real :: p

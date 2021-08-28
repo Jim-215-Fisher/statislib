@@ -3,7 +3,8 @@ module statislib_poisson
     use stdlib_kinds
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni=>uniform_distribution_rvs
-    use statislib_special, lgf=>log_factorial
+    use statislib_special, only : lgf=>log_factorial,                          &
+                                  regamma_q => regularized_gamma_q
 
     implicit none
     private
@@ -95,6 +96,7 @@ contains
 
         if(lamda <= 0.) call error_stop("Error(pois_dist_rvs): Poisson"        &
             //" distribution parameter lamda must be positive")
+
         if(L /= lamda) then              ! Initialization
             L = lamda
             if(L < 3.0) then

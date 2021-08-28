@@ -5,7 +5,7 @@ module statislib_beta
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni=>uniform_distribution_rvs
     use statislib_gamma, only : rgamma=>gamma_distribution_rvs
-    use statislib_special, only : inbeta => incomplete_beta, f_beta => beta
+    use statislib_special, only : inbeta => regularized_beta, f_beta => beta
 
 
     implicit none
@@ -90,7 +90,8 @@ contains
             end do
         else
             do
-                x = rgamma(alpha); y = rgamma(beta)
+                x = rgamma(alpha)
+                y = rgamma(beta)
                 y = x + y
                 if( y /= z) exit
             end do

@@ -26,7 +26,7 @@
 #:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
 
 #! Compare any two types and get the stronger type and kind results
-#:def comp(k1, t1, k2, t2)
+#:def comp(kk1, tt1, kk2, tt2)
   #:global res_type
   #:global res_kind
   #:if t1[0] == "i"

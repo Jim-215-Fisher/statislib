@@ -1,5 +1,5 @@
 #:include "common.fypp"
-module statislib_hypgeo
+module statislib_hypergeometric
     use stdlib_kinds
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni=>uniform_distribution_rvs
@@ -392,4 +392,4 @@ contains
     end function hypgeo_dist_cdf_${t1[0]}$${k1}$
 
     #:endfor
-end module statislib_hypgeo
+end module statislib_hypergeometric

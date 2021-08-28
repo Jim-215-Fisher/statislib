@@ -203,7 +203,7 @@ contains
         #:if t1[0] == "r"
         loc = -1.0_${k1}$; scale = 2.0_${k1}$
         #:else
-        loc = (-1.0${k1}$, 1.0${k1}$); scale = (1.7${k1}$, 2.4${k1}$)
+        loc = (-1.0_${k1}$, 1.0_${k1}$); scale = (1.7_${k1}$, 2.4_${k1}$)
         #:endif
         x1 = nor_rvs(loc, scale)
         x2 = reshape(nor_rvs(loc, scale, 12), [3,4])

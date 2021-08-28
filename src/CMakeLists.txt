@@ -26,8 +26,6 @@ set(SRC
     ${outFiles}
 )
 
-find_package(fortran_stdlib REQUIRED)
-
 add_library(${PROJECT_NAME} ${SRC})
 
 set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)

@@ -53,7 +53,7 @@ contains
             freq(j) = freq(j) + 1
         end do
         chisq = 0.0_dp
-        do i = 0, array_siez - 1
+        do i = 0, array_size - 1
            expct = num * exp(i * log(p) - p - log_factorial(i) )
            if(expct < 1.0e-7) cycle
            chisq = chisq + (freq(i) - expct) ** 2 / expct
