@@ -5,7 +5,7 @@ module statislib_negbinomial
     use statislib_uniform, only : uni=>uniform_distribution_rvs
     use statislib_gamma, only : rgamma=>gamma_distribution_rvs
     use statislib_poisson, only: rpois=>poisson_distribution_rvs
-    use statislib_special, only : inbeta=>incomplete_beta, lgf=>log_factorial
+    use special_function, only : inbeta=>incomplete_beta, lgf=>log_factorial
 
     implicit none
     private

@@ -4,7 +4,7 @@ program test_distribution_normal
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_normal, nor_rvs => normal_distribution_rvs,  &
+    use statislib, only : nor_rvs => normal_distribution_rvs,  &
                           nor_pdf => normal_distribution_pdf,  &
                           nor_cdf => normal_distribution_cdf
 

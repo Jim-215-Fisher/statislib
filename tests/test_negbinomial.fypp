@@ -3,10 +3,10 @@ program test_distribution_negbinomial
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_negbinomial,          nb_rvs => negbinomial_distribution_rvs, &
-                                        nb_pmf => negbinomial_distribution_pmf, &
-                                        nb_cdf => negbinomial_distribution_cdf
-    use statislib_special, only : lgf => log_factorial
+    use statislib, only : nb_rvs => negbinomial_distribution_rvs, &
+                          nb_pmf => negbinomial_distribution_pmf, &
+                          nb_cdf => negbinomial_distribution_cdf
+    use special_function, only : lgf => log_factorial
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES

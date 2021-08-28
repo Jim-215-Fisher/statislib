@@ -3,10 +3,10 @@ program test_distribution_hypgeo
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_hypergeometric,    hg_rvs => hypergeometric_distribution_rvs,&
-                                     hg_pmf => hypergeometric_distribution_pmf,&
-                                     hg_cdf => hypergeometric_distribution_cdf
-    use statislib_special, lgf=>log_factorial
+    use statislib, only :  hg_rvs => hypergeometric_distribution_rvs,&
+                           hg_pmf => hypergeometric_distribution_pmf,&
+                           hg_cdf => hypergeometric_distribution_cdf
+    use special_function, only : lgf=>log_factorial
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES

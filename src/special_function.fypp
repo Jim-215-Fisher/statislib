@@ -1,7 +1,7 @@
 #:include "common.fypp"
 #:set RC_KINDS_TYPES = REAL_KINDS_TYPES + CMPLX_KINDS_TYPES
 #:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
-module statislib_special
+module special_function
     use stdlib_kinds
     use stdlib_error, only : error_stop
 
@@ -1006,4 +1006,4 @@ contains
     end function regbeta_${t1[0]}$${k1}$
 
     #:endfor
-end module statislib_special
+end module special_function

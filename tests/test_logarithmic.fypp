@@ -3,9 +3,9 @@ program test_distribution_logarithmic
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_logarithmic, log_rvs => logarithmic_distribution_rvs,        &
-                               log_pmf => logarithmic_distribution_pmf,        &
-                               log_cdf => logarithmic_distribution_cdf
+    use statislib, only : log_rvs => logarithmic_distribution_rvs,        &
+                          log_pmf => logarithmic_distribution_pmf,        &
+                          log_cdf => logarithmic_distribution_cdf
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES

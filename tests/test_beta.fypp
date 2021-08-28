@@ -4,9 +4,9 @@ program test_distribution_beta
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_beta, beta_rvs => beta_distribution_rvs,                     &
-                        beta_pdf => beta_distribution_pdf,                     &
-                        beta_cdf => beta_distribution_cdf
+    use statislib, only : beta_rvs => beta_distribution_rvs,                   &
+                          beta_pdf => beta_distribution_pdf,                   &
+                          beta_cdf => beta_distribution_cdf
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES

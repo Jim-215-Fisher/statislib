@@ -3,10 +3,10 @@ program test_distribution_poisson
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_poisson,               pois_rvs => poisson_distribution_rvs, &
-                                         pois_pmf => poisson_distribution_pmf, &
-                                         pois_cdf => poisson_distribution_cdf
-    use statislib_special
+    use statislib, only : pois_rvs => poisson_distribution_rvs, &
+                          pois_pmf => poisson_distribution_pmf, &
+                          pois_cdf => poisson_distribution_cdf
+    use special_function, only : lgf => log_factorial
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES
@@ -54,7 +54,7 @@ contains
         end do
         chisq = 0.0_dp
         do i = 0, array_size - 1
-           expct = num * exp(i * log(p) - p - log_factorial(i) )
+           expct = num * exp(i * log(p) - p - lgf(i) )
            if(expct < 1.0e-7) cycle
            chisq = chisq + (freq(i) - expct) ** 2 / expct
         end do

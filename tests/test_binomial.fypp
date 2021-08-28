@@ -3,10 +3,10 @@ program test_distribution_binomial
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_binomial, binom_rvs => binomial_distribution_rvs,            &
+    use statislib, only :   binom_rvs => binomial_distribution_rvs,            &
                             binom_pmf => binomial_distribution_pmf,            &
                             binom_cdf => binomial_distribution_cdf
-    use statislib_special, only : log_factorial
+    use special_function, only : lgf => log_factorial
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES
@@ -54,8 +54,8 @@ contains
         end do
         chisq = 0.0_dp
         do i = 0, min(array_size - 1, n)
-           expct = exp(log_factorial(n) + i * log(p) + (n - i) * log(1.- p)    &
-                   - log_factorial(i) - log_factorial(n - i) + log(real(num)))
+           expct = exp(lgf(n) + i * log(p) + (n - i) * log(1.- p)    &
+                   - lgf(i) - lgf(n - i) + log(real(num)))
            if(expct < 1.0e-7) cycle
            chisq = chisq + (freq(i) - expct) ** 2 / expct
         end do

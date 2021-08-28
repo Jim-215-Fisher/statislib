@@ -4,9 +4,10 @@ program test_distribution_uniform
     use stdlib_error, only : check
     use stdlib_kinds, only: int8, int16, int32, int64, sp, dp, qp
     use stdlib_stats_distribution_PRNG, only : random_seed, dist_rand
-    use statislib_uniform, uni_rvs => uniform_distribution_rvs,                &
+    use statislib, only :  uni_rvs => uniform_distribution_rvs,                &
                            uni_pdf => uniform_distribution_pdf,                &
-                           uni_cdf => uniform_distribution_cdf
+                           uni_cdf => uniform_distribution_cdf,                &
+                           shuffle
 
     implicit none
     logical ::  warn = .true.

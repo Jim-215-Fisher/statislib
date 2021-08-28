@@ -3,7 +3,7 @@ program test_distribution_geometric
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only : random_seed
-    use statislib_geometric, geo_rvs => geometric_distribution_rvs,            &
+    use statislib, only :    geo_rvs => geometric_distribution_rvs,            &
                              geo_pmf => geometric_distribution_pmf,            &
                              geo_cdf => geometric_distribution_cdf
 

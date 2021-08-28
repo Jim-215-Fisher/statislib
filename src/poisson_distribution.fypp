@@ -3,7 +3,7 @@ module statislib_poisson
     use stdlib_kinds
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni=>uniform_distribution_rvs
-    use statislib_special, only : lgf=>log_factorial,                          &
+    use special_function,  only : lgf=>log_factorial,                          &
                                   regamma_q => regularized_gamma_q
 
     implicit none

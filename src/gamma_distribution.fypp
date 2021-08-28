@@ -5,7 +5,7 @@ module statislib_gamma
     use stdlib_error, only : error_stop
     use statislib_uniform, only : uni => uniform_distribution_rvs
     use statislib_normal, only : rnor => normal_distribution_rvs
-    use statislib_special, only : ingamma => lower_incomplete_gamma, loggamma, &
+    use special_function, only : ingamma => lower_incomplete_gamma, loggamma, &
         reggamma => regularized_gamma_p
 
     implicit none

@@ -4,9 +4,9 @@ program test_distribution_gamma
     use stdlib_kinds
     use stdlib_error, only : check
     use stdlib_stats_distribution_PRNG, only: random_seed
-    use statislib_gamma, gamma_rvs => gamma_distribution_rvs,                  &
-                         gamma_pdf => gamma_distribution_pdf,                  &
-                         gamma_cdf => gamma_distribution_cdf
+    use statislib, only : gamma_rvs => gamma_distribution_rvs,                 &
+                          gamma_pdf => gamma_distribution_pdf,                 &
+                          gamma_cdf => gamma_distribution_cdf
 
     implicit none
     #:for k1, t1 in REAL_KINDS_TYPES
